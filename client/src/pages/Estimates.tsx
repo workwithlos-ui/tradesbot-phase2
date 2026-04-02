@@ -30,7 +30,14 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { generateEstimatePdf } from "@/lib/generatePdf";
-import { calculateTotalSquares, calculateLaborQuantities, LABOR_ITEMS, CUSTOM_COST_ITEMS } from "@/lib/data";
+import {
+  calculateShingleSquares,
+  calculateLaborSquares,
+  calculateMaterialCost,
+  calculateSteepPitchAdder,
+  LABOR_ITEMS,
+  BASE_LABOR_RATE,
+} from "@/lib/data";
 
 export default function Estimates() {
   const [estimates, setEstimates] = useState<SavedEstimate[]>([]);
@@ -42,37 +49,37 @@ export default function Estimates() {
   const handleDelete = (id: string, name: string) => {
     deleteEstimate(id);
     setEstimates(getSavedEstimates());
-    toast.success(`"${name}" deleted.`);
+    toast.success('"' + name + '" deleted.');
   };
 
   const handleRegenPdf = (estimate: SavedEstimate) => {
     const { state } = estimate;
-    const totalSquares = calculateTotalSquares(state.materialQtys);
-    const laborQuantities = calculateLaborQuantities(
-      totalSquares,
-      state.materialQtys,
-      state.steepPitchTier,
-      state.secondStory
-    );
-    const totalLaborCost = LABOR_ITEMS.reduce((sum, item) => {
-      const qty = laborQuantities[item.id] || 0;
-      const cost = state.laborCosts[item.id] || 0;
-      return sum + qty * cost;
-    }, 0);
-    const totalCustomCosts = CUSTOM_COST_ITEMS.reduce(
-      (sum, item) =>
-        state.customCostEnabled[item.id]
-          ? sum + (state.customCosts[item.id] || 0)
-          : sum,
-      0
-    );
+    const shingleSquares = calculateShingleSquares(state.materialQtys);
+    const laborSquares = calculateLaborSquares(state.materialQtys);
+    const totalMaterialCost = calculateMaterialCost(state.materialQtys);
+    const steepPitchSquares = state.steepPitchSquares || {};
+    const steepPitchAdder = calculateSteepPitchAdder(steepPitchSquares);
+    const baseCost = laborSquares * (state.laborCosts?.["base-labor"] || BASE_LABOR_RATE);
+    let additionalLabor = 0;
+    for (const item of LABOR_ITEMS) {
+      if (item.isBaseLabor) continue;
+      const qty = state.laborQtys?.[item.id] || 0;
+      const cost = state.laborCosts?.[item.id] || item.defaultCostPerUnit;
+      additionalLabor += qty * cost;
+    }
+    const totalLaborCost = baseCost + steepPitchAdder + additionalLabor;
+    let totalCustomCosts = 0;
+    if (state.deliveryEnabled) totalCustomCosts += state.deliveryCost || 0;
+    const estimateTotal = totalMaterialCost + totalLaborCost + totalCustomCosts;
 
     generateEstimatePdf({
       state,
-      totalSquares,
-      laborQuantities,
+      shingleSquares,
+      laborSquares,
+      totalMaterialCost,
       totalLaborCost,
       totalCustomCosts,
+      estimateTotal,
     });
     toast.success("PDF regenerated!");
   };
@@ -83,7 +90,6 @@ export default function Estimates() {
 
       <main className="flex-1 container py-6">
         <div className="max-w-3xl mx-auto">
-          {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <Link href="/">
@@ -104,7 +110,6 @@ export default function Estimates() {
             </div>
           </div>
 
-          {/* Estimates List */}
           {estimates.length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="flex flex-col items-center justify-center py-16 text-center">
@@ -123,10 +128,7 @@ export default function Estimates() {
           ) : (
             <div className="space-y-3">
               {estimates.map((estimate) => (
-                <Card
-                  key={estimate.id}
-                  className="shadow-sm hover:shadow-md transition-shadow"
-                >
+                <Card key={estimate.id} className="shadow-sm hover:shadow-md transition-shadow">
                   <CardContent className="py-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
@@ -160,7 +162,6 @@ export default function Estimates() {
                           </span>
                         </div>
                       </div>
-
                       <div className="flex items-center gap-1.5 shrink-0">
                         <Button
                           variant="outline"
@@ -190,9 +191,7 @@ export default function Estimates() {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDelete(estimate.id, estimate.name)}
-                              >
+                              <AlertDialogAction onClick={() => handleDelete(estimate.id, estimate.name)}>
                                 Delete
                               </AlertDialogAction>
                             </AlertDialogFooter>

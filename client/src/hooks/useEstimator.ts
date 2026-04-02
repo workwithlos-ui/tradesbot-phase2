@@ -2,103 +2,182 @@ import { useState, useMemo, useCallback } from "react";
 import {
   SUPPLIERS,
   SHINGLE_TYPES,
-  CUSTOM_COST_ITEMS,
   LABOR_ITEMS,
+  MATERIAL_ITEMS,
+  CUSTOM_COST_ITEMS,
   DEFAULT_MATERIAL_QTYS,
+  DEFAULT_LABOR_QTYS,
   DEFAULT_LABOR_COSTS,
   DEFAULT_CUSTOM_COSTS,
   DEFAULT_CUSTOM_COST_ENABLED,
-  calculateTotalSquares,
-  calculateLaborQuantities,
+  BASE_LABOR_RATE,
+  STEEP_PITCH_TIERS,
+  calculateShingleSquares,
+  calculateLaborSquares,
+  calculateMaterialCost,
+  calculateSteepPitchAdder,
 } from "@/lib/data";
 
 export interface EstimatorState {
+  // Trade selector
+  selectedTrade: string;
+  // Customer info
+  customerName: string;
+  customerPhone: string;
+  customerEmail: string;
+  // Job info
   jobName: string;
   address: string;
   supplier: string;
   shingleType: string;
-  steepPitchTier: string;
-  secondStory: boolean;
+  // Steep pitch breakdown (squares at each tier)
+  steepPitchSquares: Record<string, number>;
+  // Materials
   materialQtys: Record<string, number>;
+  // Labor
+  laborQtys: Record<string, number>;
   laborCosts: Record<string, number>;
+  // Custom/delivery
   customCosts: Record<string, number>;
   customCostEnabled: Record<string, boolean>;
   deliveryEnabled: boolean;
   deliveryCost: number;
-  // Customer info fields
-  customerName: string;
-  customerPhone: string;
-  customerEmail: string;
+  // Legacy fields (kept for compatibility)
+  steepPitchTier: string;
+  secondStory: boolean;
 }
 
+const defaultSteepPitchSquares: Record<string, number> = {};
+STEEP_PITCH_TIERS.forEach((t) => {
+  defaultSteepPitchSquares[t.id] = 0;
+});
+
 const initialState: EstimatorState = {
+  selectedTrade: "shingle-roofing",
+  customerName: "",
+  customerPhone: "",
+  customerEmail: "",
   jobName: "",
   address: "",
   supplier: SUPPLIERS[0].id,
   shingleType: SHINGLE_TYPES[0].id,
-  steepPitchTier: "none",
-  secondStory: false,
+  steepPitchSquares: { ...defaultSteepPitchSquares },
   materialQtys: { ...DEFAULT_MATERIAL_QTYS },
+  laborQtys: { ...DEFAULT_LABOR_QTYS },
   laborCosts: { ...DEFAULT_LABOR_COSTS },
   customCosts: { ...DEFAULT_CUSTOM_COSTS },
   customCostEnabled: { ...DEFAULT_CUSTOM_COST_ENABLED },
   deliveryEnabled: false,
   deliveryCost: 95,
-  customerName: "",
-  customerPhone: "",
-  customerEmail: "",
+  steepPitchTier: "none",
+  secondStory: false,
 };
 
 export function useEstimator() {
   const [state, setState] = useState<EstimatorState>({ ...initialState });
 
-  const totalSquares = useMemo(
-    () => calculateTotalSquares(state.materialQtys),
+  // Shingle squares (for display, material ordering)
+  const shingleSquares = useMemo(
+    () => calculateShingleSquares(state.materialQtys),
     [state.materialQtys]
   );
 
-  const laborQuantities = useMemo(
-    () =>
-      calculateLaborQuantities(
-        totalSquares,
-        state.materialQtys,
-        state.steepPitchTier,
-        state.secondStory
-      ),
-    [totalSquares, state.materialQtys, state.steepPitchTier, state.secondStory]
+  // Labor squares (includes starter + ridge cap for labor calc)
+  const laborSquares = useMemo(
+    () => calculateLaborSquares(state.materialQtys),
+    [state.materialQtys]
   );
 
+  // Total material cost
+  const totalMaterialCost = useMemo(
+    () => calculateMaterialCost(state.materialQtys),
+    [state.materialQtys]
+  );
+
+  // Steep pitch adder
+  const steepPitchAdder = useMemo(
+    () => calculateSteepPitchAdder(state.steepPitchSquares),
+    [state.steepPitchSquares]
+  );
+
+  // Base labor cost
+  const baseLaborCost = useMemo(
+    () => laborSquares * (state.laborCosts["base-labor"] || BASE_LABOR_RATE),
+    [laborSquares, state.laborCosts]
+  );
+
+  // Additional labor cost (non-base items)
+  const additionalLaborCost = useMemo(() => {
+    let total = 0;
+    for (const item of LABOR_ITEMS) {
+      if (item.isBaseLabor) continue;
+      const qty = state.laborQtys[item.id] || 0;
+      const cost = state.laborCosts[item.id] || item.defaultCostPerUnit;
+      total += qty * cost;
+    }
+    return total;
+  }, [state.laborQtys, state.laborCosts]);
+
+  // Total labor cost
+  const totalLaborCost = useMemo(
+    () => baseLaborCost + steepPitchAdder + additionalLaborCost,
+    [baseLaborCost, steepPitchAdder, additionalLaborCost]
+  );
+
+  // Material item count (items with qty > 0)
   const materialItemCount = useMemo(
     () => Object.values(state.materialQtys).filter((v) => v > 0).length,
     [state.materialQtys]
   );
 
+  // Labor item count (non-base items with qty > 0)
   const laborItemCount = useMemo(
-    () => Object.values(laborQuantities).filter((v) => v > 0).length,
-    [laborQuantities]
+    () => {
+      let count = laborSquares > 0 ? 1 : 0; // base labor
+      for (const item of LABOR_ITEMS) {
+        if (item.isBaseLabor) continue;
+        if ((state.laborQtys[item.id] || 0) > 0) count++;
+      }
+      if (steepPitchAdder > 0) count++;
+      return count;
+    },
+    [laborSquares, state.laborQtys, steepPitchAdder]
   );
 
-  const totalCustomCosts = useMemo(
-    () =>
-      CUSTOM_COST_ITEMS.reduce(
-        (sum, item) =>
-          state.customCostEnabled[item.id]
-            ? sum + (state.customCosts[item.id] || 0)
-            : sum,
-        0
-      ),
-    [state.customCosts, state.customCostEnabled]
+  // Custom costs total
+  const totalCustomCosts = useMemo(() => {
+    let total = 0;
+    CUSTOM_COST_ITEMS.forEach((item) => {
+      if (state.customCostEnabled[item.id]) {
+        total += state.customCosts[item.id] || 0;
+      }
+    });
+    if (state.deliveryEnabled) {
+      total += state.deliveryCost;
+    }
+    return total;
+  }, [state.customCosts, state.customCostEnabled, state.deliveryEnabled, state.deliveryCost]);
+
+  // Grand total
+  const estimateTotal = useMemo(
+    () => totalMaterialCost + totalLaborCost + totalCustomCosts,
+    [totalMaterialCost, totalLaborCost, totalCustomCosts]
   );
 
-  const totalLaborCost = useMemo(
-    () =>
-      LABOR_ITEMS.reduce((sum, item) => {
-        const qty = laborQuantities[item.id] || 0;
-        const cost = state.laborCosts[item.id] || 0;
-        return sum + qty * cost;
-      }, 0),
-    [laborQuantities, state.laborCosts]
-  );
+  // Legacy compatibility
+  const totalSquares = shingleSquares;
+  const laborQuantities = useMemo(() => {
+    const result: Record<string, number> = {};
+    LABOR_ITEMS.forEach((item) => {
+      result[item.id] = item.isBaseLabor ? laborSquares : (state.laborQtys[item.id] || 0);
+    });
+    return result;
+  }, [laborSquares, state.laborQtys]);
+
+  // Setters
+  const setTrade = useCallback((value: string) => {
+    setState((prev) => ({ ...prev, selectedTrade: value }));
+  }, []);
 
   const setJobInfo = useCallback((field: string, value: string) => {
     setState((prev) => ({ ...prev, [field]: value }));
@@ -112,18 +191,24 @@ export function useEstimator() {
     setState((prev) => ({ ...prev, shingleType: value }));
   }, []);
 
-  const setSteepPitchTier = useCallback((value: string) => {
-    setState((prev) => ({ ...prev, steepPitchTier: value }));
-  }, []);
-
-  const setSecondStory = useCallback((value: boolean) => {
-    setState((prev) => ({ ...prev, secondStory: value }));
+  const setSteepPitchSquares = useCallback((tierId: string, squares: number) => {
+    setState((prev) => ({
+      ...prev,
+      steepPitchSquares: { ...prev.steepPitchSquares, [tierId]: Math.max(0, squares) },
+    }));
   }, []);
 
   const setMaterialQty = useCallback((id: string, qty: number) => {
     setState((prev) => ({
       ...prev,
       materialQtys: { ...prev.materialQtys, [id]: Math.max(0, qty) },
+    }));
+  }, []);
+
+  const setLaborQty = useCallback((id: string, qty: number) => {
+    setState((prev) => ({
+      ...prev,
+      laborQtys: { ...prev.laborQtys, [id]: Math.max(0, qty) },
     }));
   }, []);
 
@@ -159,6 +244,15 @@ export function useEstimator() {
     setState((prev) => ({ ...prev, deliveryCost: Math.max(0, cost) }));
   }, []);
 
+  // Legacy setters
+  const setSteepPitchTier = useCallback((value: string) => {
+    setState((prev) => ({ ...prev, steepPitchTier: value }));
+  }, []);
+
+  const setSecondStory = useCallback((value: boolean) => {
+    setState((prev) => ({ ...prev, secondStory: value }));
+  }, []);
+
   const resetForm = useCallback(() => {
     setState({ ...initialState });
   }, []);
@@ -169,18 +263,28 @@ export function useEstimator() {
 
   return {
     state,
-    totalSquares,
-    laborQuantities,
+    shingleSquares,
+    laborSquares,
+    totalSquares: shingleSquares,
+    totalMaterialCost,
+    baseLaborCost,
+    additionalLaborCost,
+    steepPitchAdder,
+    totalLaborCost,
     materialItemCount,
     laborItemCount,
     totalCustomCosts,
-    totalLaborCost,
+    estimateTotal,
+    laborQuantities,
+    setTrade,
     setJobInfo,
     setSupplier,
     setShingleType,
+    setSteepPitchSquares,
     setSteepPitchTier,
     setSecondStory,
     setMaterialQty,
+    setLaborQty,
     setLaborCost,
     setCustomCost,
     toggleCustomCost,
