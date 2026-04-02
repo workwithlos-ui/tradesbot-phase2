@@ -1,14 +1,18 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MATERIAL_ITEMS } from "@/lib/data";
+import { Slider } from "@/components/ui/slider";
+import { MATERIAL_ITEMS, WASTE_FACTOR_MIN, WASTE_FACTOR_MAX, calculateBundlesWithWaste } from "@/lib/data";
 import { formatCurrency } from "@/lib/utils";
-import { Package, ChevronDown, ChevronUp } from "lucide-react";
+import { Package, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 
 interface MaterialsSectionProps {
   materialQtys: Record<string, number>;
   onMaterialQtyChange: (id: string, qty: number) => void;
-  totalSquares: number;
+  shingleSquares: number;
+  laborSquares: number;
   totalMaterialCost: number;
+  wasteFactor: number;
+  onWasteFactorChange: (value: number) => void;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -23,7 +27,15 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const CATEGORY_ORDER = ["bundles", "underlayment", "flashing", "ventilation", "fasteners", "decking", "other"];
 
-export default function MaterialsSection({ materialQtys, onMaterialQtyChange, totalSquares, totalMaterialCost }: MaterialsSectionProps) {
+export default function MaterialsSection({
+  materialQtys,
+  onMaterialQtyChange,
+  shingleSquares,
+  laborSquares,
+  totalMaterialCost,
+  wasteFactor,
+  onWasteFactorChange,
+}: MaterialsSectionProps) {
   const [isOpen, setIsOpen] = useState(true);
   const activeCount = Object.values(materialQtys).filter((v) => v > 0).length;
   const totalItems = MATERIAL_ITEMS.length;
@@ -34,6 +46,15 @@ export default function MaterialsSection({ materialQtys, onMaterialQtyChange, to
     if (!grouped[item.category]) grouped[item.category] = [];
     grouped[item.category].push(item);
   }
+
+  // Waste factor guidance
+  const wasteLabel = wasteFactor <= 5 ? "Simple roof (low waste)" : wasteFactor <= 9 ? "Standard roof" : "Complex / cut-up roof";
+  const wasteColor = wasteFactor <= 5 ? "text-green-600" : wasteFactor <= 9 ? "text-amber-600" : "text-red-600";
+
+  // Suggested bundles with waste (based on current shingle squares)
+  const suggestedBundles = shingleSquares > 0 ? calculateBundlesWithWaste(shingleSquares, wasteFactor) : null;
+  const currentBundles = materialQtys["shingle-bundles"] || 0;
+  const bundleShortfall = suggestedBundles !== null ? suggestedBundles - currentBundles : 0;
 
   return (
     <Card>
@@ -53,15 +74,61 @@ export default function MaterialsSection({ materialQtys, onMaterialQtyChange, to
             <span className="text-sm font-bold font-num text-primary">
               {formatCurrency(totalMaterialCost)}
             </span>
-            <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-              {totalSquares.toFixed(1)}sq
-            </span>
             {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
           </div>
         </div>
       </CardHeader>
       {isOpen && (
         <CardContent>
+          {/* Waste Factor (Ryan Part 2) */}
+          <div className="mb-5 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <span className="text-sm font-semibold">Waste Factor</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`text-xs font-medium ${wasteColor}`}>{wasteLabel}</span>
+                <span className="text-lg font-bold font-num text-amber-700">{wasteFactor}%</span>
+              </div>
+            </div>
+            <Slider
+              min={WASTE_FACTOR_MIN}
+              max={WASTE_FACTOR_MAX}
+              step={1}
+              value={[wasteFactor]}
+              onValueChange={(vals) => onWasteFactorChange(vals[0])}
+              className="mb-2"
+            />
+            <div className="flex justify-between text-[10px] text-muted-foreground mb-2">
+              <span>{WASTE_FACTOR_MIN}% (simple)</span>
+              <span>8% (standard)</span>
+              <span>{WASTE_FACTOR_MAX}% (complex)</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Waste factor adds extra bundles to account for cuts and overages. Simple roofs: 4-6%. Standard: 8%. Complex/cut-up roofs: 10-12%+.
+            </p>
+            {shingleSquares > 0 && suggestedBundles !== null && (
+              <div className="mt-2 pt-2 border-t border-amber-200">
+                <p className="text-xs font-medium text-amber-800">
+                  Suggested shingle bundles with {wasteFactor}% waste: <span className="font-bold">{suggestedBundles} bundles</span>
+                  {" "}({shingleSquares.toFixed(1)} sq × {(1 + wasteFactor/100).toFixed(2)} = {(shingleSquares * (1 + wasteFactor/100)).toFixed(2)} sq → {suggestedBundles} bundles)
+                </p>
+                {bundleShortfall > 0 && (
+                  <p className="text-xs text-red-600 font-medium mt-1">
+                    ⚠ Currently {currentBundles} bundles entered — {bundleShortfall} short of suggested amount
+                  </p>
+                )}
+                {bundleShortfall < 0 && (
+                  <p className="text-xs text-green-600 font-medium mt-1">
+                    ✓ Currently {currentBundles} bundles entered — {Math.abs(bundleShortfall)} over suggested amount
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Material line items by category */}
           {CATEGORY_ORDER.map((cat) => {
             const items = grouped[cat];
             if (!items || items.length === 0) return null;
@@ -106,6 +173,25 @@ export default function MaterialsSection({ materialQtys, onMaterialQtyChange, to
               </div>
             );
           })}
+
+          {/* Total Squares — auto-populated from materials input */}
+          <div className="mt-4 pt-3 border-t border-border">
+            <div className="flex items-center gap-4 mb-3">
+              <div className="flex-1 bg-primary/5 border border-primary/20 rounded-lg p-3 text-center">
+                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Shingle Squares</div>
+                <div className="text-2xl font-bold font-num text-primary">{shingleSquares.toFixed(1)}</div>
+                <div className="text-[10px] text-muted-foreground">From shingle bundles only</div>
+              </div>
+              <div className="flex-1 bg-primary/5 border border-primary/20 rounded-lg p-3 text-center">
+                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Labor Squares</div>
+                <div className="text-2xl font-bold font-num text-primary">{laborSquares.toFixed(1)}</div>
+                <div className="text-[10px] text-muted-foreground">Shingles + starter + ridge</div>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Every 3 bundles = 1 square. Labor squares include starter, ridge cap, and high-profile ridge bundles.
+            </p>
+          </div>
 
           {/* Material Total */}
           <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">

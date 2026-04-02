@@ -21,7 +21,7 @@ export default function Home() {
   const handleSave = () => {
     const saved = saveEstimate(
       estimator.state,
-      estimator.shingleSquares,
+      estimator.laborSquares,
       estimator.estimateTotal
     );
     toast.success(`Estimate "${saved.name}" saved.`);
@@ -33,9 +33,17 @@ export default function Home() {
       shingleSquares: estimator.shingleSquares,
       laborSquares: estimator.laborSquares,
       totalMaterialCost: estimator.totalMaterialCost,
+      baseLaborCost: estimator.baseLaborCost,
+      additionalLaborCost: estimator.additionalLaborCost,
+      steepPitchAdder: estimator.steepPitchAdder,
       totalLaborCost: estimator.totalLaborCost,
+      tarpCharge: estimator.tarpCharge,
+      deliveryCostTotal: estimator.deliveryCostTotal,
+      additionalCostsTotal: estimator.additionalCostsTotal,
       totalCustomCosts: estimator.totalCustomCosts,
       estimateTotal: estimator.estimateTotal,
+      requiredCustomerPrice: estimator.requiredCustomerPrice,
+      targetMarginPct: estimator.state.targetMarginPct,
     });
     toast.success("PDF generated!");
   };
@@ -75,19 +83,22 @@ export default function Home() {
                 address={estimator.state.address}
                 supplier={estimator.state.supplier}
                 shingleType={estimator.state.shingleType}
-                shingleSquares={estimator.shingleSquares}
-                laborSquares={estimator.laborSquares}
+                market={estimator.state.market}
                 steepPitchSquares={estimator.state.steepPitchSquares}
                 onJobInfoChange={estimator.setJobInfo}
                 onSupplierChange={estimator.setSupplier}
                 onShingleTypeChange={estimator.setShingleType}
+                onMarketChange={estimator.setMarket}
                 onSteepPitchSquaresChange={estimator.setSteepPitchSquares}
               />
               <MaterialsSection
                 materialQtys={estimator.state.materialQtys}
                 onMaterialQtyChange={estimator.setMaterialQty}
-                totalSquares={estimator.shingleSquares}
+                shingleSquares={estimator.shingleSquares}
+                laborSquares={estimator.laborSquares}
                 totalMaterialCost={estimator.totalMaterialCost}
+                wasteFactor={estimator.state.wasteFactor}
+                onWasteFactorChange={estimator.setWasteFactor}
               />
               <LaborSection
                 laborSquares={estimator.laborSquares}
@@ -106,14 +117,16 @@ export default function Home() {
                 deliveryCost={estimator.state.deliveryCost}
                 onDeliveryChange={estimator.setDelivery}
                 onDeliveryCostChange={estimator.setDeliveryCost}
-                customCosts={estimator.state.customCosts}
-                customCostEnabled={estimator.state.customCostEnabled}
-                onCustomCostChange={estimator.setCustomCost}
-                onToggleCustomCost={estimator.toggleCustomCost}
+                additionalCosts={estimator.state.additionalCosts}
+                onAddAdditionalCost={estimator.addAdditionalCost}
+                onUpdateAdditionalCost={estimator.updateAdditionalCost}
+                onRemoveAdditionalCost={estimator.removeAdditionalCost}
+                tarpCharge={estimator.tarpCharge}
+                totalCustomCosts={estimator.totalCustomCosts}
               />
             </div>
 
-            {/* Right column: Estimate Summary (sticky) */}
+            {/* Right column: Estimate Summary + Margin Calculator (sticky) */}
             <div className="w-full lg:w-80 shrink-0">
               <div className="sticky top-6">
                 <EstimateSummary
@@ -122,12 +135,23 @@ export default function Home() {
                   laborSquares={estimator.laborSquares}
                   materialItemCount={estimator.materialItemCount}
                   totalMaterialCost={estimator.totalMaterialCost}
+                  baseLaborCost={estimator.baseLaborCost}
+                  additionalLaborCost={estimator.additionalLaborCost}
+                  steepPitchAdder={estimator.steepPitchAdder}
                   totalLaborCost={estimator.totalLaborCost}
+                  tarpCharge={estimator.tarpCharge}
                   totalCustomCosts={estimator.totalCustomCosts}
                   estimateTotal={estimator.estimateTotal}
+                  requiredCustomerPrice={estimator.requiredCustomerPrice}
+                  pricePerSquare={estimator.pricePerSquare}
+                  costPerSquare={estimator.costPerSquare}
+                  insuranceScopeMargin={estimator.insuranceScopeMargin}
+                  insuranceScopePerSquare={estimator.insuranceScopePerSquare}
                   onReset={estimator.resetForm}
                   onSave={handleSave}
                   onGeneratePdf={handleGeneratePdf}
+                  onTargetMarginChange={estimator.setTargetMarginPct}
+                  onInsuranceScopePriceChange={estimator.setInsuranceScopePrice}
                 />
               </div>
             </div>
@@ -140,7 +164,7 @@ export default function Home() {
       )}
 
       <MobileSummaryBar
-        shingleSquares={estimator.shingleSquares}
+        laborSquares={estimator.laborSquares}
         materialItemCount={estimator.materialItemCount}
         laborItemCount={estimator.laborItemCount}
         estimateTotal={estimator.estimateTotal}

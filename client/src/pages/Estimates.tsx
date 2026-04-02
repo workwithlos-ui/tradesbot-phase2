@@ -37,6 +37,7 @@ import {
   calculateSteepPitchAdder,
   LABOR_ITEMS,
   BASE_LABOR_RATE,
+  TARP_SYSTEM_CHARGE,
 } from "@/lib/data";
 
 export default function Estimates() {
@@ -68,8 +69,14 @@ export default function Estimates() {
       additionalLabor += qty * cost;
     }
     const totalLaborCost = baseCost + steepPitchAdder + additionalLabor;
-    let totalCustomCosts = 0;
-    if (state.deliveryEnabled) totalCustomCosts += state.deliveryCost || 0;
+
+    // Calculate additional costs: tarp + delivery + free-form items
+    const tarpCharge = TARP_SYSTEM_CHARGE;
+    const deliveryCostTotal = state.deliveryEnabled ? (state.deliveryCost || 0) : 0;
+    const additionalCosts = state.additionalCosts || [];
+    const additionalCostsTotal = additionalCosts.reduce((sum: number, item: { amount?: number }) => sum + (item.amount || 0), 0);
+    const totalCustomCosts = tarpCharge + deliveryCostTotal + additionalCostsTotal;
+
     const estimateTotal = totalMaterialCost + totalLaborCost + totalCustomCosts;
 
     generateEstimatePdf({
@@ -78,6 +85,9 @@ export default function Estimates() {
       laborSquares,
       totalMaterialCost,
       totalLaborCost,
+      tarpCharge,
+      deliveryCostTotal,
+      additionalCostsTotal,
       totalCustomCosts,
       estimateTotal,
     });
