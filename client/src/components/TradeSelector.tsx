@@ -1,13 +1,12 @@
 import { TRADE_OPTIONS } from "@/lib/data";
-import { cn } from "@/lib/utils";
 import { Home, Building2, PanelTop, Droplets, Grid2X2, Lock } from "lucide-react";
 
 const TRADE_ICONS: Record<string, React.ReactNode> = {
-  "shingle-roofing": <Home className="w-4 h-4" />,
-  "commercial-flat": <Building2 className="w-4 h-4" />,
-  "siding": <PanelTop className="w-4 h-4" />,
-  "gutters": <Droplets className="w-4 h-4" />,
-  "windows": <Grid2X2 className="w-4 h-4" />,
+  "shingle-roofing": <Home className="w-3.5 h-3.5" />,
+  "commercial-flat": <Building2 className="w-3.5 h-3.5" />,
+  "siding": <PanelTop className="w-3.5 h-3.5" />,
+  "gutters": <Droplets className="w-3.5 h-3.5" />,
+  "windows": <Grid2X2 className="w-3.5 h-3.5" />,
 };
 
 interface TradeSelectorProps {
@@ -17,9 +16,9 @@ interface TradeSelectorProps {
 
 export default function TradeSelector({ selectedTrade, onTradeChange }: TradeSelectorProps) {
   return (
-    <div className="bg-card border-b border-border/60">
-      <div className="container py-3">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+    <div className="border-b border-border/60 bg-background">
+      <div className="container">
+        <div className="flex gap-1 overflow-x-auto py-2" style={{ scrollbarWidth: "none" }}>
           {TRADE_OPTIONS.map((trade) => {
             const isSelected = selectedTrade === trade.id;
             const isAvailable = trade.available;
@@ -28,19 +27,18 @@ export default function TradeSelector({ selectedTrade, onTradeChange }: TradeSel
                 key={trade.id}
                 onClick={() => isAvailable && onTradeChange(trade.id)}
                 disabled={!isAvailable}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all",
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all shrink-0 ${
                   isSelected
-                    ? "bg-primary text-primary-foreground shadow-sm"
+                    ? "bg-primary text-primary-foreground"
                     : isAvailable
-                    ? "bg-secondary text-secondary-foreground hover:bg-accent"
-                    : "bg-muted text-muted-foreground/50 cursor-not-allowed"
-                )}
+                    ? "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                    : "text-muted-foreground/35 cursor-not-allowed"
+                }`}
               >
-                {isAvailable ? TRADE_ICONS[trade.id] : <Lock className="w-3.5 h-3.5" />}
-                {trade.name}
+                {isAvailable ? TRADE_ICONS[trade.id] : <Lock className="w-3 h-3" />}
+                <span>{trade.name}</span>
                 {!isAvailable && (
-                  <span className="text-[10px] font-normal opacity-60 ml-0.5">Coming Soon</span>
+                  <span className="text-[10px] opacity-60 font-normal">Soon</span>
                 )}
               </button>
             );

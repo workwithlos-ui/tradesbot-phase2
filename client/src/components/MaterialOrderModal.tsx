@@ -1,31 +1,30 @@
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { MATERIAL_ITEMS, SHINGLE_TYPES, SUPPLIERS } from "@/lib/data";
 import type { EstimatorState } from "@/hooks/useEstimator";
 import { formatCurrency } from "@/lib/utils";
-import { ShoppingCart, Copy, Printer, CheckCircle } from "lucide-react";
+import { ShoppingCart, Copy, Printer, CheckCircle, X } from "lucide-react";
 
 interface MaterialOrderModalProps {
+  isOpen: boolean;
+  onClose: () => void;
   state: EstimatorState;
   shingleSquares: number;
-  totalMaterialCost: number;
+  laborSquares: number;
 }
 
-export default function MaterialOrderModal({ state, shingleSquares, totalMaterialCost }: MaterialOrderModalProps) {
+export default function MaterialOrderModal({ isOpen, onClose, state, shingleSquares, laborSquares }: MaterialOrderModalProps) {
   const [copied, setCopied] = useState(false);
+
+  if (!isOpen) return null;
 
   const shingle = SHINGLE_TYPES.find((s) => s.id === state.shingleType);
   const supplier = SUPPLIERS.find((s) => s.id === state.supplier);
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  const totalMaterialCost = MATERIAL_ITEMS.reduce(
+    (sum, item) => sum + (state.materialQtys[item.id] || 0) * item.unitPrice,
+    0
+  );
 
-  // Build order lines (only items with qty > 0)
   const orderLines = MATERIAL_ITEMS
     .filter((item) => (state.materialQtys[item.id] || 0) > 0)
     .map((item) => ({
@@ -105,95 +104,119 @@ export default function MaterialOrderModal({ state, shingleSquares, totalMateria
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1.5">
-          <ShoppingCart className="w-3.5 h-3.5" />
-          Material Order
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <ShoppingCart className="w-4 h-4 text-primary" />
-            Material Order — {supplier?.name || "ABC Supply"}
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm animate-fade-in"
+        onClick={onClose}
+      />
 
-        {/* Order Header */}
-        <div className="bg-secondary/50 rounded-lg p-4 text-sm space-y-1">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-            <div><span className="font-semibold">Date:</span> {today}</div>
-            <div><span className="font-semibold">Supplier:</span> {supplier?.name || "ABC Supply"}</div>
-            <div><span className="font-semibold">Customer:</span> {state.customerName || "—"}</div>
-            <div><span className="font-semibold">Shingle:</span> {shingle?.name || "—"}</div>
-            <div className="col-span-2"><span className="font-semibold">Address:</span> {state.address || "—"}</div>
-            <div><span className="font-semibold">Squares:</span> {shingleSquares.toFixed(1)} sq</div>
+      {/* Modal */}
+      <div className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 bg-card rounded-2xl shadow-2xl max-h-[85vh] overflow-y-auto sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border/60 sticky top-0 bg-card">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center text-primary">
+              <ShoppingCart className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold">Material Order</h2>
+              <p className="text-xs text-muted-foreground">{supplier?.name || "ABC Supply"}</p>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-lg hover:bg-secondary transition-colors"
+          >
+            <X className="w-4 h-4 text-muted-foreground" />
+          </button>
         </div>
 
-        {/* Order Lines */}
-        {orderLines.length === 0 ? (
-          <div className="text-center py-8 border border-dashed border-border rounded-lg">
-            <p className="text-muted-foreground text-sm">No materials entered yet. Fill in the Materials section first.</p>
+        <div className="px-5 py-4 space-y-4">
+          {/* Order Header */}
+          <div className="bg-secondary/50 rounded-xl p-4 text-sm space-y-1">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+              <div><span className="font-medium text-muted-foreground">Date:</span> <span>{today}</span></div>
+              <div><span className="font-medium text-muted-foreground">Supplier:</span> <span>{supplier?.name || "ABC Supply"}</span></div>
+              <div><span className="font-medium text-muted-foreground">Customer:</span> <span>{state.customerName || "—"}</span></div>
+              <div><span className="font-medium text-muted-foreground">Shingle:</span> <span>{shingle?.name || "—"}</span></div>
+              <div className="col-span-2"><span className="font-medium text-muted-foreground">Address:</span> <span>{state.address || "—"}</span></div>
+              <div><span className="font-medium text-muted-foreground">Squares:</span> <span className="font-num">{shingleSquares.toFixed(1)} sq</span></div>
+            </div>
           </div>
-        ) : (
-          <div className="border border-border rounded-lg overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-secondary/50 border-b border-border">
-                  <th className="text-left px-3 py-2 font-semibold text-muted-foreground text-xs">#</th>
-                  <th className="text-left px-3 py-2 font-semibold text-muted-foreground text-xs">Item</th>
-                  <th className="text-right px-3 py-2 font-semibold text-muted-foreground text-xs">Qty</th>
-                  <th className="text-left px-3 py-2 font-semibold text-muted-foreground text-xs">Unit</th>
-                  <th className="text-right px-3 py-2 font-semibold text-muted-foreground text-xs">Unit $</th>
-                  <th className="text-right px-3 py-2 font-semibold text-muted-foreground text-xs">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orderLines.map((line) => (
-                  <tr key={line.lineNumber} className="border-b border-border/30 last:border-b-0 hover:bg-secondary/20">
-                    <td className="px-3 py-2 text-muted-foreground text-xs font-num">{line.lineNumber}</td>
-                    <td className="px-3 py-2 font-medium">{line.name}</td>
-                    <td className="px-3 py-2 text-right font-num font-bold">{line.qty}</td>
-                    <td className="px-3 py-2 text-muted-foreground text-xs">{line.unit}</td>
-                    <td className="px-3 py-2 text-right font-num text-muted-foreground">{formatCurrency(line.unitPrice)}</td>
-                    <td className="px-3 py-2 text-right font-num font-semibold">{formatCurrency(line.total)}</td>
+
+          {/* Order Lines */}
+          {orderLines.length === 0 ? (
+            <div className="text-center py-8 border border-dashed border-border/60 rounded-xl">
+              <p className="text-muted-foreground text-sm">No materials entered yet.</p>
+            </div>
+          ) : (
+            <div className="border border-border/60 rounded-xl overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-secondary/50 border-b border-border/60">
+                    <th className="text-left px-3 py-2 font-semibold text-muted-foreground text-xs">#</th>
+                    <th className="text-left px-3 py-2 font-semibold text-muted-foreground text-xs">Item</th>
+                    <th className="text-right px-3 py-2 font-semibold text-muted-foreground text-xs">Qty</th>
+                    <th className="text-left px-3 py-2 font-semibold text-muted-foreground text-xs hidden sm:table-cell">Unit</th>
+                    <th className="text-right px-3 py-2 font-semibold text-muted-foreground text-xs hidden sm:table-cell">Unit $</th>
+                    <th className="text-right px-3 py-2 font-semibold text-muted-foreground text-xs">Total</th>
                   </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr className="bg-primary/5 border-t border-primary/20">
-                  <td colSpan={5} className="px-3 py-2 font-bold text-sm">Total Material Cost</td>
-                  <td className="px-3 py-2 text-right font-bold font-num text-primary text-sm">{formatCurrency(totalMaterialCost)}</td>
-                </tr>
-              </tfoot>
-            </table>
+                </thead>
+                <tbody>
+                  {orderLines.map((line) => (
+                    <tr key={line.lineNumber} className="border-b border-border/30 last:border-b-0">
+                      <td className="px-3 py-2 text-muted-foreground text-xs font-num">{line.lineNumber}</td>
+                      <td className="px-3 py-2 font-medium text-sm">{line.name}</td>
+                      <td className="px-3 py-2 text-right font-num font-bold">{line.qty}</td>
+                      <td className="px-3 py-2 text-muted-foreground text-xs hidden sm:table-cell">{line.unit}</td>
+                      <td className="px-3 py-2 text-right font-num text-muted-foreground hidden sm:table-cell">{formatCurrency(line.unitPrice)}</td>
+                      <td className="px-3 py-2 text-right font-num font-semibold">{formatCurrency(line.total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-primary/5 border-t border-primary/20">
+                    <td colSpan={5} className="px-3 py-2.5 font-bold text-sm">Total Material Cost</td>
+                    <td className="px-3 py-2.5 text-right font-bold font-num text-primary text-sm">{formatCurrency(totalMaterialCost)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          )}
+
+          {/* Notes */}
+          <div className="bg-amber-50 border border-amber-200/80 rounded-xl p-3.5 text-xs text-amber-800">
+            <p className="font-semibold mb-1.5">Order Notes:</p>
+            <ul className="space-y-1 list-disc list-inside">
+              <li>Confirm all pricing with {supplier?.name || "ABC Supply"} before finalizing</li>
+              <li>Delivery address: {state.address || "TBD"}</li>
+              {state.deliveryEnabled && <li>Delivery requested — coordinate with supplier</li>}
+            </ul>
           </div>
-        )}
 
-        {/* Notes */}
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
-          <p className="font-semibold mb-1">Order Notes:</p>
-          <ul className="space-y-0.5 list-disc list-inside">
-            <li>Confirm all pricing with {supplier?.name || "ABC Supply"} before finalizing</li>
-            <li>Delivery address: {state.address || "TBD"}</li>
-            {state.deliveryEnabled && <li>Delivery requested — coordinate with supplier</li>}
-          </ul>
+          {/* Action Buttons */}
+          <div className="grid grid-cols-2 gap-3 pb-2">
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="flex items-center justify-center gap-2 px-4 py-3 border border-border rounded-xl text-sm font-medium hover:bg-secondary transition-colors"
+            >
+              {copied ? <CheckCircle className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+              {copied ? "Copied!" : "Copy Text"}
+            </button>
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="flex items-center justify-center gap-2 px-4 py-3 border border-border rounded-xl text-sm font-medium hover:bg-secondary transition-colors"
+            >
+              <Printer className="w-4 h-4" />
+              Print Order
+            </button>
+          </div>
         </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-2 pt-2">
-          <Button onClick={handleCopy} variant="outline" className="gap-1.5 flex-1">
-            {copied ? <CheckCircle className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
-            {copied ? "Copied!" : "Copy to Clipboard"}
-          </Button>
-          <Button onClick={handlePrint} variant="outline" className="gap-1.5 flex-1">
-            <Printer className="w-3.5 h-3.5" />
-            Print Order
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </>
   );
 }

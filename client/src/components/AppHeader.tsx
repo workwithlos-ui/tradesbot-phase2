@@ -1,23 +1,25 @@
 import { Hammer } from "lucide-react";
+import { Link } from "wouter";
 
 export default function AppHeader() {
   return (
-    <header className="bg-primary text-primary-foreground">
-      <div className="container flex items-center justify-between py-3">
+    <header className="sticky top-0 z-30 bg-card/95 backdrop-blur-sm border-b border-border/60">
+      <div className="container flex items-center justify-between h-14">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center">
-            <Hammer className="w-5 h-5" />
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
+            <Hammer className="w-4 h-4 text-primary-foreground" />
           </div>
-          <div>
-            <h1 className="text-lg font-bold leading-tight">TradesBot</h1>
-            <p className="text-xs text-primary-foreground/70">Roofing Material and Labor Estimator</p>
+          <div className="flex items-baseline gap-2">
+            <span className="font-bold text-[15px] tracking-tight">TradesBot</span>
+            <span className="hidden sm:inline text-xs text-muted-foreground">Roofing Estimator</span>
           </div>
         </div>
-        <div className="text-right text-xs text-primary-foreground/80">
-          <span className="font-medium">ABC Supply</span>
-          <span className="mx-1.5 opacity-50">|</span>
-          <span>Trusted Roofing LLC</span>
-        </div>
+        <Link
+          href="/estimates"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium"
+        >
+          Saved
+        </Link>
       </div>
     </header>
   );

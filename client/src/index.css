@@ -45,47 +45,71 @@
 }
 
 :root {
-  --primary: oklch(0.45 0.18 260);
-  --primary-foreground: oklch(0.98 0 0);
-  --sidebar-primary: oklch(0.50 0.20 260);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --chart-1: oklch(0.65 0.15 260);
-  --chart-2: oklch(0.55 0.18 260);
-  --chart-3: oklch(0.50 0.20 260);
-  --chart-4: oklch(0.45 0.18 260);
-  --chart-5: oklch(0.40 0.15 260);
-  --radius: 0.625rem;
-  --background: oklch(0.975 0.002 80);
-  --foreground: oklch(0.20 0.02 65);
+  /* Primary: clean blue, not too saturated */
+  --primary: oklch(0.48 0.17 255);
+  --primary-foreground: oklch(0.99 0 0);
+
+  /* Sidebar */
+  --sidebar-primary: oklch(0.48 0.17 255);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+
+  /* Charts */
+  --chart-1: oklch(0.65 0.14 255);
+  --chart-2: oklch(0.55 0.17 255);
+  --chart-3: oklch(0.50 0.18 255);
+  --chart-4: oklch(0.45 0.17 255);
+  --chart-5: oklch(0.40 0.14 255);
+
+  /* Radius: slightly tighter for a cleaner look */
+  --radius: 0.5rem;
+
+  /* Background: pure white, very clean */
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.13 0.015 255);
+
+  /* Cards: white with very subtle shadow */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.20 0.02 65);
+  --card-foreground: oklch(0.13 0.015 255);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.20 0.02 65);
-  --secondary: oklch(0.96 0.005 80);
-  --secondary-foreground: oklch(0.40 0.02 65);
-  --muted: oklch(0.955 0.005 80);
-  --muted-foreground: oklch(0.50 0.015 65);
-  --accent: oklch(0.955 0.005 80);
-  --accent-foreground: oklch(0.20 0.02 65);
-  --destructive: oklch(0.58 0.24 27);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.90 0.005 80);
-  --input: oklch(0.90 0.005 80);
-  --ring: oklch(0.50 0.20 260);
-  --sidebar: oklch(0.98 0 0);
-  --sidebar-foreground: oklch(0.20 0.02 65);
-  --sidebar-accent: oklch(0.955 0.005 80);
-  --sidebar-accent-foreground: oklch(0.20 0.02 65);
-  --sidebar-border: oklch(0.90 0.005 80);
-  --sidebar-ring: oklch(0.50 0.20 260);
+  --popover-foreground: oklch(0.13 0.015 255);
+
+  /* Secondary: very light gray */
+  --secondary: oklch(0.97 0.003 255);
+  --secondary-foreground: oklch(0.40 0.015 255);
+
+  /* Muted: slightly warmer gray */
+  --muted: oklch(0.96 0.003 255);
+  --muted-foreground: oklch(0.52 0.012 255);
+
+  /* Accent */
+  --accent: oklch(0.96 0.003 255);
+  --accent-foreground: oklch(0.13 0.015 255);
+
+  /* Destructive */
+  --destructive: oklch(0.60 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  /* Borders: very subtle, barely visible */
+  --border: oklch(0.92 0.003 255);
+  --input: oklch(0.92 0.003 255);
+  --ring: oklch(0.48 0.17 255);
+
+  /* Sidebar */
+  --sidebar: oklch(0.99 0 0);
+  --sidebar-foreground: oklch(0.13 0.015 255);
+  --sidebar-accent: oklch(0.96 0.003 255);
+  --sidebar-accent-foreground: oklch(0.13 0.015 255);
+  --sidebar-border: oklch(0.92 0.003 255);
+  --sidebar-ring: oklch(0.48 0.17 255);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
   }
   button:not(:disabled),
@@ -98,6 +122,21 @@
   input[type="checkbox"]:not(:disabled),
   input[type="radio"]:not(:disabled) {
     @apply cursor-pointer;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Better number inputs on mobile */
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
   }
 }
 
@@ -126,7 +165,7 @@
     .container {
       padding-left: 2rem;
       padding-right: 2rem;
-      max-width: 1400px;
+      max-width: 1280px;
     }
   }
 
@@ -134,4 +173,108 @@
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
   }
+
+  /* Section accordion */
+  .section-card {
+    @apply bg-card border border-border rounded-xl overflow-hidden;
+  }
+
+  /* Clean input style */
+  .field-input {
+    @apply w-full px-3.5 py-3 text-sm border border-input rounded-lg bg-background
+           focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary/50
+           transition-colors placeholder:text-muted-foreground/50;
+    min-height: 44px;
+  }
+
+  /* Number stepper input */
+  .num-input {
+    @apply w-full px-3 py-2.5 text-sm text-right border border-input rounded-lg bg-background
+           focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary/50
+           transition-colors;
+    min-height: 44px;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Select */
+  .field-select {
+    @apply w-full px-3.5 py-3 text-sm border border-input rounded-lg bg-background
+           focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary/50
+           transition-colors appearance-none;
+    min-height: 44px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+
+  /* Section header (accordion trigger) */
+  .section-header {
+    @apply flex items-center justify-between px-5 py-4 cursor-pointer select-none
+           hover:bg-secondary/40 transition-colors;
+  }
+
+  /* Label */
+  .field-label {
+    @apply block text-xs font-medium text-muted-foreground mb-1.5;
+  }
+
+  /* Pill badge */
+  .pill {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  /* Slide-up sheet overlay */
+  .sheet-overlay {
+    @apply fixed inset-0 bg-black/40 z-40 backdrop-blur-sm;
+  }
+
+  .sheet-panel {
+    @apply fixed bottom-0 left-0 right-0 bg-card rounded-t-2xl z-50
+           shadow-2xl max-h-[90vh] overflow-y-auto;
+  }
+
+  /* Touch-friendly toggle */
+  .toggle-track {
+    @apply relative inline-flex h-7 w-12 items-center rounded-full transition-colors;
+  }
+
+  .toggle-thumb {
+    @apply inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform;
+  }
+}
+
+/* Slide-up animation for sheet */
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Accordion content animation */
+@keyframes accordionDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes accordionUp {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-4px); }
+}
+
+.accordion-content {
+  animation: accordionDown 0.2s ease-out;
 }

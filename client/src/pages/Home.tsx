@@ -168,6 +168,17 @@ export default function Home() {
         materialItemCount={estimator.materialItemCount}
         laborItemCount={estimator.laborItemCount}
         estimateTotal={estimator.estimateTotal}
+        jobName={estimator.state.jobName}
+        address={estimator.state.address}
+        shingleSquares={estimator.shingleSquares}
+        materialsTotal={estimator.totalMaterialCost}
+        laborTotal={estimator.totalLaborCost}
+        customCostsTotal={estimator.totalCustomCosts}
+        targetMarginPct={estimator.state.targetMarginPct}
+        requiredCustomerPrice={estimator.requiredCustomerPrice}
+        onTargetMarginChange={estimator.setTargetMarginPct}
+        onGeneratePdf={handleGeneratePdf}
+        onSave={handleSave}
       />
     </div>
   );

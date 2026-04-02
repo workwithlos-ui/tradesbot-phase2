@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import SectionAccordion from "@/components/SectionAccordion";
 import { Slider } from "@/components/ui/slider";
 import { MATERIAL_ITEMS, WASTE_FACTOR_MIN, WASTE_FACTOR_MAX, calculateBundlesWithWaste } from "@/lib/data";
 import { formatCurrency } from "@/lib/utils";
-import { Package, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
+import { Package } from "lucide-react";
 
 interface MaterialsSectionProps {
   materialQtys: Record<string, number>;
@@ -16,13 +16,13 @@ interface MaterialsSectionProps {
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  bundles: "Shingle Bundles (count toward squares)",
-  underlayment: "Underlayment and Shields",
-  flashing: "Flashing, Edge, and Metal",
+  bundles: "Shingle Bundles",
+  underlayment: "Underlayment & Shields",
+  flashing: "Flashing, Edge & Metal",
   ventilation: "Ventilation",
   fasteners: "Fasteners",
   decking: "Decking",
-  other: "Other Materials",
+  other: "Other",
 };
 
 const CATEGORY_ORDER = ["bundles", "underlayment", "flashing", "ventilation", "fasteners", "decking", "other"];
@@ -36,172 +36,192 @@ export default function MaterialsSection({
   wasteFactor,
   onWasteFactorChange,
 }: MaterialsSectionProps) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({
+    bundles: true,
+    underlayment: true,
+    flashing: false,
+    ventilation: false,
+    fasteners: false,
+    decking: false,
+    other: false,
+  });
+
   const activeCount = Object.values(materialQtys).filter((v) => v > 0).length;
   const totalItems = MATERIAL_ITEMS.length;
 
-  // Group materials by category
   const grouped: Record<string, typeof MATERIAL_ITEMS> = {};
   for (const item of MATERIAL_ITEMS) {
     if (!grouped[item.category]) grouped[item.category] = [];
     grouped[item.category].push(item);
   }
 
-  // Waste factor guidance
-  const wasteLabel = wasteFactor <= 5 ? "Simple roof (low waste)" : wasteFactor <= 9 ? "Standard roof" : "Complex / cut-up roof";
-  const wasteColor = wasteFactor <= 5 ? "text-green-600" : wasteFactor <= 9 ? "text-amber-600" : "text-red-600";
+  const wasteLabel =
+    wasteFactor <= 5 ? "Simple roof" : wasteFactor <= 9 ? "Standard" : "Complex / cut-up";
+  const wasteColor =
+    wasteFactor <= 5 ? "text-emerald-600" : wasteFactor <= 9 ? "text-amber-600" : "text-red-500";
 
-  // Suggested bundles with waste (based on current shingle squares)
-  const suggestedBundles = shingleSquares > 0 ? calculateBundlesWithWaste(shingleSquares, wasteFactor) : null;
+  const suggestedBundles =
+    shingleSquares > 0 ? calculateBundlesWithWaste(shingleSquares, wasteFactor) : null;
   const currentBundles = materialQtys["shingle-bundles"] || 0;
-  const bundleShortfall = suggestedBundles !== null ? suggestedBundles - currentBundles : 0;
+  const bundleDiff = suggestedBundles !== null ? suggestedBundles - currentBundles : 0;
+
+  const rightContent = (
+    <div className="text-right">
+      <div className="text-sm font-bold font-num text-primary">{formatCurrency(totalMaterialCost)}</div>
+      <div className="text-xs text-muted-foreground">{activeCount}/{totalItems} items</div>
+    </div>
+  );
 
   return (
-    <Card>
-      <CardHeader
-        className="cursor-pointer select-none"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Package className="w-4 h-4 text-primary" />
-            Materials
-            <span className="text-xs font-normal text-muted-foreground">
-              ({activeCount} of {totalItems} items)
-            </span>
-          </CardTitle>
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-bold font-num text-primary">
-              {formatCurrency(totalMaterialCost)}
-            </span>
-            {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-          </div>
+    <SectionAccordion
+      icon={<Package className="w-4 h-4" />}
+      title="Materials"
+      subtitle={activeCount > 0 ? `${activeCount} items · ${shingleSquares.toFixed(1)} sq shingles, ${laborSquares.toFixed(1)} sq labor` : "Enter quantities for each material"}
+      rightContent={rightContent}
+      defaultOpen={true}
+    >
+      {/* Squares summary */}
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        <div className="bg-primary/5 border border-primary/15 rounded-xl p-3.5 text-center">
+          <div className="text-xs font-medium text-muted-foreground mb-1">Shingle Squares</div>
+          <div className="text-2xl font-bold font-num text-primary">{shingleSquares.toFixed(1)}</div>
+          <div className="text-[10px] text-muted-foreground mt-0.5">From shingle bundles</div>
         </div>
-      </CardHeader>
-      {isOpen && (
-        <CardContent>
-          {/* Waste Factor (Ryan Part 2) */}
-          <div className="mb-5 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
+        <div className="bg-secondary border border-border/60 rounded-xl p-3.5 text-center">
+          <div className="text-xs font-medium text-muted-foreground mb-1">Labor Squares</div>
+          <div className="text-2xl font-bold font-num">{laborSquares.toFixed(1)}</div>
+          <div className="text-[10px] text-muted-foreground mt-0.5">Shingles + starter + ridge</div>
+        </div>
+      </div>
+
+      {/* Waste Factor */}
+      <div className="mb-5 bg-amber-50 border border-amber-200/80 rounded-xl p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <span className="text-sm font-semibold">Waste Factor</span>
+            <span className={`text-xs ml-2 font-medium ${wasteColor}`}>{wasteLabel}</span>
+          </div>
+          <span className="text-xl font-bold font-num text-amber-700">{wasteFactor}%</span>
+        </div>
+        <Slider
+          min={WASTE_FACTOR_MIN}
+          max={WASTE_FACTOR_MAX}
+          step={1}
+          value={[wasteFactor]}
+          onValueChange={(vals) => onWasteFactorChange(vals[0])}
+          className="mb-2"
+        />
+        <div className="flex justify-between text-[10px] text-muted-foreground">
+          <span>{WASTE_FACTOR_MIN}% simple</span>
+          <span>8% standard</span>
+          <span>{WASTE_FACTOR_MAX}% complex</span>
+        </div>
+        {suggestedBundles !== null && shingleSquares > 0 && (
+          <div className="mt-3 pt-3 border-t border-amber-200/60 text-xs">
+            <span className="text-amber-800 font-medium">
+              Suggested: <span className="font-bold">{suggestedBundles} bundles</span>
+            </span>
+            {bundleDiff > 0 && (
+              <span className="text-red-600 font-medium ml-2">
+                ({currentBundles} entered — {bundleDiff} short)
+              </span>
+            )}
+            {bundleDiff < 0 && (
+              <span className="text-emerald-600 font-medium ml-2">
+                ({currentBundles} entered — {Math.abs(bundleDiff)} over)
+              </span>
+            )}
+            {bundleDiff === 0 && currentBundles > 0 && (
+              <span className="text-emerald-600 font-medium ml-2">✓ On target</span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Material categories */}
+      {CATEGORY_ORDER.map((cat) => {
+        const items = grouped[cat];
+        if (!items || items.length === 0) return null;
+        const catTotal = items.reduce((sum, item) => sum + (materialQtys[item.id] || 0) * item.unitPrice, 0);
+        const catActive = items.filter((item) => (materialQtys[item.id] || 0) > 0).length;
+        const isOpen = openCategories[cat] ?? false;
+
+        return (
+          <div key={cat} className="mb-3 last:mb-0">
+            <button
+              type="button"
+              onClick={() => setOpenCategories((prev) => ({ ...prev, [cat]: !prev[cat] }))}
+              className="w-full flex items-center justify-between py-2 text-left group"
+            >
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-600" />
-                <span className="text-sm font-semibold">Waste Factor</span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  {CATEGORY_LABELS[cat] || cat}
+                </span>
+                {catActive > 0 && (
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-primary/10 text-primary">
+                    {catActive}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2">
-                <span className={`text-xs font-medium ${wasteColor}`}>{wasteLabel}</span>
-                <span className="text-lg font-bold font-num text-amber-700">{wasteFactor}%</span>
+                {catTotal > 0 && (
+                  <span className="text-xs font-num font-medium text-primary">{formatCurrency(catTotal)}</span>
+                )}
+                <span className={`text-muted-foreground transition-transform duration-150 ${isOpen ? "rotate-180" : ""}`}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </span>
               </div>
-            </div>
-            <Slider
-              min={WASTE_FACTOR_MIN}
-              max={WASTE_FACTOR_MAX}
-              step={1}
-              value={[wasteFactor]}
-              onValueChange={(vals) => onWasteFactorChange(vals[0])}
-              className="mb-2"
-            />
-            <div className="flex justify-between text-[10px] text-muted-foreground mb-2">
-              <span>{WASTE_FACTOR_MIN}% (simple)</span>
-              <span>8% (standard)</span>
-              <span>{WASTE_FACTOR_MAX}% (complex)</span>
-            </div>
-            <p className="text-[11px] text-muted-foreground">
-              Waste factor adds extra bundles to account for cuts and overages. Simple roofs: 4-6%. Standard: 8%. Complex/cut-up roofs: 10-12%+.
-            </p>
-            {shingleSquares > 0 && suggestedBundles !== null && (
-              <div className="mt-2 pt-2 border-t border-amber-200">
-                <p className="text-xs font-medium text-amber-800">
-                  Suggested shingle bundles with {wasteFactor}% waste: <span className="font-bold">{suggestedBundles} bundles</span>
-                  {" "}({shingleSquares.toFixed(1)} sq × {(1 + wasteFactor/100).toFixed(2)} = {(shingleSquares * (1 + wasteFactor/100)).toFixed(2)} sq → {suggestedBundles} bundles)
-                </p>
-                {bundleShortfall > 0 && (
-                  <p className="text-xs text-red-600 font-medium mt-1">
-                    ⚠ Currently {currentBundles} bundles entered — {bundleShortfall} short of suggested amount
-                  </p>
-                )}
-                {bundleShortfall < 0 && (
-                  <p className="text-xs text-green-600 font-medium mt-1">
-                    ✓ Currently {currentBundles} bundles entered — {Math.abs(bundleShortfall)} over suggested amount
-                  </p>
-                )}
+            </button>
+
+            {isOpen && (
+              <div className="space-y-1 pb-2">
+                {items.map((item) => {
+                  const qty = materialQtys[item.id] || 0;
+                  const lineTotal = qty * item.unitPrice;
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-2 py-2 border-b border-border/40 last:border-0"
+                    >
+                      <span className="text-[10px] font-num text-muted-foreground/60 w-5 text-right shrink-0">
+                        {item.lineNumber}
+                      </span>
+                      <span className="text-sm flex-1 min-w-0 leading-tight" title={item.name}>
+                        {item.name}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground shrink-0 w-10 text-right">
+                        {item.unit}
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                        value={qty || ""}
+                        onChange={(e) =>
+                          onMaterialQtyChange(item.id, parseInt(e.target.value) || 0)
+                        }
+                        className="w-16 px-2 py-2 text-sm text-right border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary/50 font-num transition-colors"
+                        style={{ minHeight: "40px" }}
+                      />
+                      <span className="text-xs font-num text-muted-foreground w-14 text-right shrink-0">
+                        {qty > 0 ? formatCurrency(lineTotal) : ""}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
+        );
+      })}
 
-          {/* Material line items by category */}
-          {CATEGORY_ORDER.map((cat) => {
-            const items = grouped[cat];
-            if (!items || items.length === 0) return null;
-            return (
-              <div key={cat} className="mb-4 last:mb-0">
-                <h4 className="text-[11px] font-semibold text-primary uppercase tracking-wider mb-2">
-                  {CATEGORY_LABELS[cat] || cat}
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
-                  {items.map((item) => {
-                    const qty = materialQtys[item.id] || 0;
-                    const lineTotal = qty * item.unitPrice;
-                    return (
-                      <div
-                        key={item.id}
-                        className="flex items-center gap-2 py-1 border-b border-border/30 last:border-b-0"
-                      >
-                        <span className="text-[10px] font-num text-muted-foreground w-5 text-right shrink-0">
-                          {item.lineNumber}
-                        </span>
-                        <span className="text-sm flex-1 min-w-0 truncate" title={item.name}>
-                          {item.name}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground shrink-0 w-12 text-right">
-                          {item.unit}
-                        </span>
-                        <input
-                          type="number"
-                          min="0"
-                          placeholder="0"
-                          value={qty || ""}
-                          onChange={(e) => onMaterialQtyChange(item.id, parseInt(e.target.value) || 0)}
-                          className="w-14 px-1.5 py-1 text-sm text-right border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring font-num"
-                        />
-                        <span className="text-xs font-num text-muted-foreground w-16 text-right shrink-0">
-                          {qty > 0 ? formatCurrency(lineTotal) : ""}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Total Squares — auto-populated from materials input */}
-          <div className="mt-4 pt-3 border-t border-border">
-            <div className="flex items-center gap-4 mb-3">
-              <div className="flex-1 bg-primary/5 border border-primary/20 rounded-lg p-3 text-center">
-                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Shingle Squares</div>
-                <div className="text-2xl font-bold font-num text-primary">{shingleSquares.toFixed(1)}</div>
-                <div className="text-[10px] text-muted-foreground">From shingle bundles only</div>
-              </div>
-              <div className="flex-1 bg-primary/5 border border-primary/20 rounded-lg p-3 text-center">
-                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Labor Squares</div>
-                <div className="text-2xl font-bold font-num text-primary">{laborSquares.toFixed(1)}</div>
-                <div className="text-[10px] text-muted-foreground">Shingles + starter + ridge</div>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Every 3 bundles = 1 square. Labor squares include starter, ridge cap, and high-profile ridge bundles.
-            </p>
-          </div>
-
-          {/* Material Total */}
-          <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
-            <span className="text-sm font-semibold">Material Total</span>
-            <span className="text-lg font-bold font-num text-primary">
-              {formatCurrency(totalMaterialCost)}
-            </span>
-          </div>
-        </CardContent>
-      )}
-    </Card>
+      {/* Material Total */}
+      <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
+        <span className="text-sm font-semibold">Material Total</span>
+        <span className="text-lg font-bold font-num text-primary">{formatCurrency(totalMaterialCost)}</span>
+      </div>
+    </SectionAccordion>
   );
 }
