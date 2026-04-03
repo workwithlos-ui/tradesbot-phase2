@@ -2,7 +2,7 @@ import { useState } from "react";
 import { MATERIAL_ITEMS, SHINGLE_TYPES, SUPPLIERS } from "@/lib/data";
 import type { EstimatorState } from "@/hooks/useEstimator";
 import { formatCurrency } from "@/lib/utils";
-import { ShoppingCart, Copy, Printer, CheckCircle, X } from "lucide-react";
+import { Copy, Printer, CheckCircle, X } from "lucide-react";
 
 interface MaterialOrderModalProps {
   isOpen: boolean;
@@ -21,8 +21,7 @@ export default function MaterialOrderModal({ isOpen, onClose, state, shingleSqua
   const supplier = SUPPLIERS.find((s) => s.id === state.supplier);
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   const totalMaterialCost = MATERIAL_ITEMS.reduce(
-    (sum, item) => sum + (state.materialQtys[item.id] || 0) * item.unitPrice,
-    0
+    (sum, item) => sum + (state.materialQtys[item.id] || 0) * item.unitPrice, 0
   );
 
   const orderLines = MATERIAL_ITEMS
@@ -38,40 +37,31 @@ export default function MaterialOrderModal({ isOpen, onClose, state, shingleSqua
 
   const generateOrderText = () => {
     const lines = [
-      "═══════════════════════════════════════════════════════",
-      "                  MATERIAL ORDER",
-      "═══════════════════════════════════════════════════════",
+      "MATERIAL ORDER",
+      "=".repeat(60),
       `Date: ${today}`,
-      `Customer: ${state.customerName || "(No customer name)"}`,
-      `Job Address: ${state.address || "(No address)"}`,
-      `Job Name: ${state.jobName || "(No job name)"}`,
+      `Customer: ${state.customerName || "N/A"}`,
+      `Job: ${state.jobName || "N/A"}`,
+      `Address: ${state.address || "N/A"}`,
       `Supplier: ${supplier?.name || "ABC Supply"}`,
-      `Shingle Type: ${shingle?.name || "N/A"}`,
-      `Shingle Squares: ${shingleSquares.toFixed(1)} sq`,
-      "───────────────────────────────────────────────────────",
+      `Shingle: ${shingle?.name || "N/A"}`,
+      `Squares: ${shingleSquares.toFixed(1)} shingle / ${laborSquares.toFixed(1)} labor`,
+      "-".repeat(60),
       "",
-      "MATERIAL ORDER LIST:",
-      "",
-      `${"#".padEnd(4)} ${"Item".padEnd(35)} ${"Qty".padStart(6)} ${"Unit".padEnd(10)} ${"Unit $".padStart(8)} ${"Total".padStart(10)}`,
-      "─".repeat(80),
+      `${"#".padEnd(4)} ${"Item".padEnd(35)} ${"Qty".padStart(6)} ${"Unit".padEnd(10)} ${"Total".padStart(10)}`,
+      "-".repeat(70),
     ];
-
     for (const line of orderLines) {
       lines.push(
-        `${String(line.lineNumber).padEnd(4)} ${line.name.padEnd(35)} ${String(line.qty).padStart(6)} ${line.unit.padEnd(10)} ${formatCurrency(line.unitPrice).padStart(8)} ${formatCurrency(line.total).padStart(10)}`
+        `${String(line.lineNumber).padEnd(4)} ${line.name.padEnd(35)} ${String(line.qty).padStart(6)} ${line.unit.padEnd(10)} ${formatCurrency(line.total).padStart(10)}`
       );
     }
-
-    lines.push("─".repeat(80));
-    lines.push(`${"".padEnd(4)} ${"TOTAL MATERIAL COST".padEnd(35)} ${"".padStart(6)} ${"".padEnd(10)} ${"".padStart(8)} ${formatCurrency(totalMaterialCost).padStart(10)}`);
+    lines.push("-".repeat(70));
+    lines.push(`${"".padEnd(4)} ${"TOTAL".padEnd(35)} ${"".padStart(6)} ${"".padEnd(10)} ${formatCurrency(totalMaterialCost).padStart(10)}`);
     lines.push("");
-    lines.push("═══════════════════════════════════════════════════════");
-    lines.push("Notes:");
-    lines.push("- Please confirm pricing before finalizing order");
-    lines.push(`- Deliver to: ${state.address || "TBD"}`);
-    lines.push(`- Contact: ${state.customerName || "TBD"} ${state.customerPhone ? `| ${state.customerPhone}` : ""}`);
-    lines.push("═══════════════════════════════════════════════════════");
-
+    lines.push("Notes: Please confirm pricing and delivery date.");
+    lines.push(`Deliver to: ${state.address || "TBD"}`);
+    lines.push(`Contact: ${state.customerName || "TBD"} ${state.customerPhone ? `| ${state.customerPhone}` : ""}`);
     return lines.join("\n");
   };
 
@@ -83,138 +73,107 @@ export default function MaterialOrderModal({ isOpen, onClose, state, shingleSqua
   };
 
   const handlePrint = () => {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Material Order — ${state.jobName || state.customerName || "TradesBot"}</title>
-          <style>
-            body { font-family: monospace; font-size: 12px; padding: 20px; }
-            pre { white-space: pre-wrap; }
-          </style>
-        </head>
-        <body>
-          <pre>${generateOrderText()}</pre>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.print();
+    const w = window.open("", "_blank");
+    if (!w) return;
+    w.document.write(`<html><head><title>Material Order</title><style>body{font-family:monospace;font-size:12px;padding:20px;background:#fff;color:#000}pre{white-space:pre-wrap}</style></head><body><pre>${generateOrderText()}</pre></body></html>`);
+    w.document.close();
+    w.print();
   };
 
   return (
     <>
-      {/* Backdrop */}
+      <div className="sheet-overlay animate-fade-in" onClick={onClose} />
       <div
-        className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm animate-fade-in"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 bg-card rounded-2xl shadow-2xl max-h-[85vh] overflow-y-auto sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-2xl">
+        className="fixed inset-4 lg:inset-y-8 lg:inset-x-auto lg:left-1/2 lg:-translate-x-1/2 lg:w-full lg:max-w-2xl z-50 flex flex-col rounded-xl overflow-hidden animate-fade-in"
+        style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 25px 60px rgba(0,0,0,0.5)" }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border/60 sticky top-0 bg-card">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center text-primary">
-              <ShoppingCart className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold">Material Order</h2>
-              <p className="text-xs text-muted-foreground">{supplier?.name || "ABC Supply"}</p>
-            </div>
+        <div className="flex items-center justify-between px-5 py-4 shrink-0" style={{ borderBottom: "1px solid var(--border)", background: "var(--card)" }}>
+          <div>
+            <h2 className="text-base font-bold" style={{ color: "var(--foreground)" }}>Material Order</h2>
+            <p className="text-[11px] mt-0.5" style={{ color: "var(--muted-foreground)" }}>{supplier?.name || "ABC Supply"} · {shingle?.name || "N/A"}</p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2 rounded-lg hover:bg-secondary transition-colors"
-          >
-            <X className="w-4 h-4 text-muted-foreground" />
+          <button onClick={onClose} className="p-2 rounded-lg transition-colors" style={{ color: "var(--muted-foreground)" }}>
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="px-5 py-4 space-y-4">
-          {/* Order Header */}
-          <div className="bg-secondary/50 rounded-xl p-4 text-sm space-y-1">
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-              <div><span className="font-medium text-muted-foreground">Date:</span> <span>{today}</span></div>
-              <div><span className="font-medium text-muted-foreground">Supplier:</span> <span>{supplier?.name || "ABC Supply"}</span></div>
-              <div><span className="font-medium text-muted-foreground">Customer:</span> <span>{state.customerName || "—"}</span></div>
-              <div><span className="font-medium text-muted-foreground">Shingle:</span> <span>{shingle?.name || "—"}</span></div>
-              <div className="col-span-2"><span className="font-medium text-muted-foreground">Address:</span> <span>{state.address || "—"}</span></div>
-              <div><span className="font-medium text-muted-foreground">Squares:</span> <span className="font-num">{shingleSquares.toFixed(1)} sq</span></div>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+          <div className="rounded-lg p-3" style={{ background: "var(--secondary)" }}>
+            <div className="grid grid-cols-2 gap-2 text-[11px]">
+              <div><span style={{ color: "var(--muted-foreground)" }}>Date:</span> <span style={{ color: "var(--foreground)" }}>{today}</span></div>
+              <div><span style={{ color: "var(--muted-foreground)" }}>Customer:</span> <span style={{ color: "var(--foreground)" }}>{state.customerName || "—"}</span></div>
+              <div className="col-span-2"><span style={{ color: "var(--muted-foreground)" }}>Address:</span> <span style={{ color: "var(--foreground)" }}>{state.address || "—"}</span></div>
+              <div><span style={{ color: "var(--muted-foreground)" }}>Shingle Sq:</span> <span className="font-num font-medium" style={{ color: "var(--foreground)" }}>{shingleSquares.toFixed(1)}</span></div>
+              <div><span style={{ color: "var(--muted-foreground)" }}>Labor Sq:</span> <span className="font-num font-medium" style={{ color: "var(--foreground)" }}>{laborSquares.toFixed(1)}</span></div>
             </div>
           </div>
 
-          {/* Order Lines */}
           {orderLines.length === 0 ? (
-            <div className="text-center py-8 border border-dashed border-border/60 rounded-xl">
-              <p className="text-muted-foreground text-sm">No materials entered yet.</p>
+            <div className="text-center py-8 rounded-lg" style={{ border: "1px dashed var(--border)" }}>
+              <p className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>No materials entered yet.</p>
             </div>
           ) : (
-            <div className="border border-border/60 rounded-xl overflow-hidden">
-              <table className="w-full text-sm">
+            <div className="rounded-lg overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+              <table className="w-full text-[11px]">
                 <thead>
-                  <tr className="bg-secondary/50 border-b border-border/60">
-                    <th className="text-left px-3 py-2 font-semibold text-muted-foreground text-xs">#</th>
-                    <th className="text-left px-3 py-2 font-semibold text-muted-foreground text-xs">Item</th>
-                    <th className="text-right px-3 py-2 font-semibold text-muted-foreground text-xs">Qty</th>
-                    <th className="text-left px-3 py-2 font-semibold text-muted-foreground text-xs hidden sm:table-cell">Unit</th>
-                    <th className="text-right px-3 py-2 font-semibold text-muted-foreground text-xs hidden sm:table-cell">Unit $</th>
-                    <th className="text-right px-3 py-2 font-semibold text-muted-foreground text-xs">Total</th>
+                  <tr style={{ background: "var(--secondary)" }}>
+                    <th className="text-left px-3 py-2 font-semibold" style={{ color: "var(--muted-foreground)" }}>#</th>
+                    <th className="text-left px-3 py-2 font-semibold" style={{ color: "var(--muted-foreground)" }}>Item</th>
+                    <th className="text-right px-3 py-2 font-semibold" style={{ color: "var(--muted-foreground)" }}>Qty</th>
+                    <th className="text-left px-3 py-2 font-semibold hidden sm:table-cell" style={{ color: "var(--muted-foreground)" }}>Unit</th>
+                    <th className="text-right px-3 py-2 font-semibold hidden sm:table-cell" style={{ color: "var(--muted-foreground)" }}>Unit $</th>
+                    <th className="text-right px-3 py-2 font-semibold" style={{ color: "var(--muted-foreground)" }}>Total</th>
                   </tr>
                 </thead>
                 <tbody>
                   {orderLines.map((line) => (
-                    <tr key={line.lineNumber} className="border-b border-border/30 last:border-b-0">
-                      <td className="px-3 py-2 text-muted-foreground text-xs font-num">{line.lineNumber}</td>
-                      <td className="px-3 py-2 font-medium text-sm">{line.name}</td>
-                      <td className="px-3 py-2 text-right font-num font-bold">{line.qty}</td>
-                      <td className="px-3 py-2 text-muted-foreground text-xs hidden sm:table-cell">{line.unit}</td>
-                      <td className="px-3 py-2 text-right font-num text-muted-foreground hidden sm:table-cell">{formatCurrency(line.unitPrice)}</td>
-                      <td className="px-3 py-2 text-right font-num font-semibold">{formatCurrency(line.total)}</td>
+                    <tr key={line.lineNumber} style={{ borderBottom: "1px solid var(--border)" }}>
+                      <td className="px-3 py-2 font-num" style={{ color: "var(--muted-foreground)" }}>{line.lineNumber}</td>
+                      <td className="px-3 py-2 font-medium" style={{ color: "var(--foreground)" }}>{line.name}</td>
+                      <td className="px-3 py-2 text-right font-num font-bold" style={{ color: "var(--foreground)" }}>{line.qty}</td>
+                      <td className="px-3 py-2 hidden sm:table-cell" style={{ color: "var(--muted-foreground)" }}>{line.unit}</td>
+                      <td className="px-3 py-2 text-right font-num hidden sm:table-cell" style={{ color: "var(--muted-foreground)" }}>{formatCurrency(line.unitPrice)}</td>
+                      <td className="px-3 py-2 text-right font-num font-semibold" style={{ color: "var(--foreground)" }}>{formatCurrency(line.total)}</td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr className="bg-primary/5 border-t border-primary/20">
-                    <td colSpan={5} className="px-3 py-2.5 font-bold text-sm">Total Material Cost</td>
-                    <td className="px-3 py-2.5 text-right font-bold font-num text-primary text-sm">{formatCurrency(totalMaterialCost)}</td>
+                  <tr style={{ background: "rgba(0,212,170,0.06)" }}>
+                    <td colSpan={5} className="px-3 py-2.5 font-bold" style={{ color: "var(--foreground)" }}>Total</td>
+                    <td className="px-3 py-2.5 text-right font-bold font-num" style={{ color: "var(--primary)" }}>{formatCurrency(totalMaterialCost)}</td>
                   </tr>
                 </tfoot>
               </table>
             </div>
           )}
 
-          {/* Notes */}
-          <div className="bg-amber-50 border border-amber-200/80 rounded-xl p-3.5 text-xs text-amber-800">
-            <p className="font-semibold mb-1.5">Order Notes:</p>
-            <ul className="space-y-1 list-disc list-inside">
-              <li>Confirm all pricing with {supplier?.name || "ABC Supply"} before finalizing</li>
-              <li>Delivery address: {state.address || "TBD"}</li>
-              {state.deliveryEnabled && <li>Delivery requested — coordinate with supplier</li>}
-            </ul>
+          <div className="surface-warn rounded-lg p-3">
+            <p className="text-[11px] font-medium" style={{ color: "#FBBF24" }}>
+              Confirm pricing with {supplier?.name || "ABC Supply"} before finalizing. Deliver to: {state.address || "TBD"}
+            </p>
           </div>
+        </div>
 
-          {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-3 pb-2">
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="flex items-center justify-center gap-2 px-4 py-3 border border-border rounded-xl text-sm font-medium hover:bg-secondary transition-colors"
-            >
-              {copied ? <CheckCircle className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-              {copied ? "Copied!" : "Copy Text"}
-            </button>
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="flex items-center justify-center gap-2 px-4 py-3 border border-border rounded-xl text-sm font-medium hover:bg-secondary transition-colors"
-            >
-              <Printer className="w-4 h-4" />
-              Print Order
-            </button>
-          </div>
+        {/* Footer */}
+        <div className="flex items-center gap-2 px-5 py-4 shrink-0" style={{ borderTop: "1px solid var(--border)" }}>
+          <button
+            onClick={handleCopy}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold transition-all active:scale-[0.98]"
+            style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
+          >
+            {copied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            {copied ? "Copied!" : "Copy Order"}
+          </button>
+          <button
+            onClick={handlePrint}
+            className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all"
+            style={{ border: "1px solid var(--border)", color: "var(--foreground)" }}
+          >
+            <Printer className="w-4 h-4" />
+            Print
+          </button>
         </div>
       </div>
     </>

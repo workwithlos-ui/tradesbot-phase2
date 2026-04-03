@@ -40,67 +40,69 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
-  --font-mono: 'Space Mono', monospace;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Space Mono', 'SF Mono', 'Fira Code', monospace;
 }
 
+/*
+ * DARK THEME — Whoop / Linear / Stripe aesthetic
+ * Near-black backgrounds, dark card surfaces, eggshell text, teal accent
+ */
 :root {
-  /* Primary: clean blue, not too saturated */
-  --primary: oklch(0.48 0.17 255);
-  --primary-foreground: oklch(0.99 0 0);
-
-  /* Sidebar */
-  --sidebar-primary: oklch(0.48 0.17 255);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
+  /* Primary accent: clean teal — used sparingly for CTAs and active states */
+  --primary: #00D4AA;
+  --primary-foreground: #0D0D0D;
 
   /* Charts */
-  --chart-1: oklch(0.65 0.14 255);
-  --chart-2: oklch(0.55 0.17 255);
-  --chart-3: oklch(0.50 0.18 255);
-  --chart-4: oklch(0.45 0.17 255);
-  --chart-5: oklch(0.40 0.14 255);
+  --chart-1: #00D4AA;
+  --chart-2: #00B894;
+  --chart-3: #00A87E;
+  --chart-4: #009868;
+  --chart-5: #008852;
 
-  /* Radius: slightly tighter for a cleaner look */
-  --radius: 0.5rem;
+  /* Radius: tight, modern */
+  --radius: 0.625rem;
 
-  /* Background: pure white, very clean */
-  --background: oklch(0.99 0 0);
-  --foreground: oklch(0.13 0.015 255);
+  /* Background: near-black */
+  --background: #0D0D0D;
+  --foreground: #F0EAD6;
 
-  /* Cards: white with very subtle shadow */
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.13 0.015 255);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.13 0.015 255);
+  /* Cards: dark gray surfaces */
+  --card: #1A1A1A;
+  --card-foreground: #F0EAD6;
+  --popover: #1A1A1A;
+  --popover-foreground: #F0EAD6;
 
-  /* Secondary: very light gray */
-  --secondary: oklch(0.97 0.003 255);
-  --secondary-foreground: oklch(0.40 0.015 255);
+  /* Secondary: slightly lighter dark surface */
+  --secondary: #222222;
+  --secondary-foreground: #A8A29E;
 
-  /* Muted: slightly warmer gray */
-  --muted: oklch(0.96 0.003 255);
-  --muted-foreground: oklch(0.52 0.012 255);
+  /* Muted: for labels and secondary text */
+  --muted: #1C1C1E;
+  --muted-foreground: #78716C;
 
-  /* Accent */
-  --accent: oklch(0.96 0.003 255);
-  --accent-foreground: oklch(0.13 0.015 255);
+  /* Accent: subtle highlight surface */
+  --accent: #1E1E1E;
+  --accent-foreground: #F0EAD6;
 
   /* Destructive */
-  --destructive: oklch(0.60 0.22 25);
-  --destructive-foreground: oklch(0.99 0 0);
+  --destructive: #EF4444;
+  --destructive-foreground: #F0EAD6;
 
-  /* Borders: very subtle, barely visible */
-  --border: oklch(0.92 0.003 255);
-  --input: oklch(0.92 0.003 255);
-  --ring: oklch(0.48 0.17 255);
+  /* Borders: subtle, barely visible on dark */
+  --border: #2A2A2A;
+  --input: #2A2A2A;
+  --ring: #00D4AA;
 
   /* Sidebar */
-  --sidebar: oklch(0.99 0 0);
-  --sidebar-foreground: oklch(0.13 0.015 255);
-  --sidebar-accent: oklch(0.96 0.003 255);
-  --sidebar-accent-foreground: oklch(0.13 0.015 255);
-  --sidebar-border: oklch(0.92 0.003 255);
-  --sidebar-ring: oklch(0.48 0.17 255);
+  --sidebar: #141414;
+  --sidebar-foreground: #F0EAD6;
+  --sidebar-primary: #00D4AA;
+  --sidebar-primary-foreground: #0D0D0D;
+  --sidebar-accent: #1E1E1E;
+  --sidebar-accent-foreground: #F0EAD6;
+  --sidebar-border: #2A2A2A;
+  --sidebar-ring: #00D4AA;
 }
 
 @layer base {
@@ -111,6 +113,7 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
+    letter-spacing: -0.01em;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -124,12 +127,12 @@
     @apply cursor-pointer;
   }
 
-  /* Smooth scrolling */
   html {
     scroll-behavior: smooth;
+    color-scheme: dark;
   }
 
-  /* Better number inputs on mobile */
+  /* Remove native number spinners */
   input[type="number"] {
     -moz-appearance: textfield;
   }
@@ -137,6 +140,28 @@
   input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
+  }
+
+  /* Custom scrollbar for dark theme */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #444;
+  }
+
+  /* Selection color */
+  ::selection {
+    background: rgba(0, 212, 170, 0.25);
+    color: #F0EAD6;
   }
 }
 
@@ -169,86 +194,209 @@
     }
   }
 
+  /* Monospace numbers — tabular figures for alignment */
   .font-num {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
   }
 
-  /* Section accordion */
+  /* ─── Section card: dark surface panel ─── */
   .section-card {
-    @apply bg-card border border-border rounded-xl overflow-hidden;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+  }
+  .section-card:hover {
+    border-color: #333;
   }
 
-  /* Clean input style */
+  /* ─── Field input: dark input fields ─── */
   .field-input {
-    @apply w-full px-3.5 py-3 text-sm border border-input rounded-lg bg-background
-           focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary/50
-           transition-colors placeholder:text-muted-foreground/50;
+    width: 100%;
+    padding: 0.75rem 0.875rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--foreground);
+    background: var(--background);
+    border: 1px solid var(--input);
+    border-radius: 0.5rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
     min-height: 44px;
   }
+  .field-input::placeholder {
+    color: var(--muted-foreground);
+    opacity: 0.5;
+  }
+  .field-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(0, 212, 170, 0.1);
+  }
 
-  /* Number stepper input */
+  /* ─── Number input: dark, right-aligned ─── */
   .num-input {
-    @apply w-full px-3 py-2.5 text-sm text-right border border-input rounded-lg bg-background
-           focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary/50
-           transition-colors;
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    text-align: right;
+    color: var(--foreground);
+    background: var(--background);
+    border: 1px solid var(--input);
+    border-radius: 0.5rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
     min-height: 44px;
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+  .num-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(0, 212, 170, 0.1);
   }
 
-  /* Select */
+  /* ─── Select: dark dropdown ─── */
   .field-select {
-    @apply w-full px-3.5 py-3 text-sm border border-input rounded-lg bg-background
-           focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary/50
-           transition-colors appearance-none;
+    width: 100%;
+    padding: 0.75rem 2.25rem 0.75rem 0.875rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--foreground);
+    background: var(--background);
+    border: 1px solid var(--input);
+    border-radius: 0.5rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    appearance: none;
     min-height: 44px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2378716C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
-    padding-right: 36px;
+  }
+  .field-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(0, 212, 170, 0.1);
+  }
+  .field-select option {
+    background: var(--card);
+    color: var(--foreground);
   }
 
-  /* Section header (accordion trigger) */
+  /* ─── Section header: accordion trigger ─── */
   .section-header {
-    @apply flex items-center justify-between px-5 py-4 cursor-pointer select-none
-           hover:bg-secondary/40 transition-colors;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.15s ease;
+  }
+  .section-header:hover {
+    background-color: rgba(255, 255, 255, 0.02);
   }
 
-  /* Label */
+  /* ─── Label ─── */
   .field-label {
-    @apply block text-xs font-medium text-muted-foreground mb-1.5;
+    display: block;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    margin-bottom: 0.375rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
-  /* Pill badge */
+  /* ─── Pill badge ─── */
   .pill {
-    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 500;
   }
 
-  /* Slide-up sheet overlay */
+  /* ─── Sheet overlay (mobile slide-up) ─── */
   .sheet-overlay {
-    @apply fixed inset-0 bg-black/40 z-40 backdrop-blur-sm;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 40;
+    backdrop-filter: blur(4px);
   }
 
   .sheet-panel {
-    @apply fixed bottom-0 left-0 right-0 bg-card rounded-t-2xl z-50
-           shadow-2xl max-h-[90vh] overflow-y-auto;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card);
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+    z-index: 50;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.5);
   }
 
-  /* Touch-friendly toggle */
+  /* ─── Toggle switch ─── */
   .toggle-track {
-    @apply relative inline-flex h-7 w-12 items-center rounded-full transition-colors;
+    position: relative;
+    display: inline-flex;
+    height: 1.75rem;
+    width: 3rem;
+    align-items: center;
+    border-radius: 9999px;
+    transition: background-color 0.2s ease;
   }
 
   .toggle-thumb {
-    @apply inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform;
+    display: inline-block;
+    height: 1.25rem;
+    width: 1.25rem;
+    transform: translateX(0);
+    border-radius: 9999px;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease;
+  }
+
+  /* ─── Accent glow for primary elements ─── */
+  .glow-accent {
+    box-shadow: 0 0 20px rgba(0, 212, 170, 0.15);
+  }
+
+  /* ─── Subtle surface for highlighted panels ─── */
+  .surface-highlight {
+    background: rgba(0, 212, 170, 0.06);
+    border: 1px solid rgba(0, 212, 170, 0.12);
+  }
+
+  .surface-warn {
+    background: rgba(251, 191, 36, 0.06);
+    border: 1px solid rgba(251, 191, 36, 0.12);
+  }
+
+  .surface-danger {
+    background: rgba(239, 68, 68, 0.06);
+    border: 1px solid rgba(239, 68, 68, 0.12);
+  }
+
+  .surface-success {
+    background: rgba(34, 197, 94, 0.06);
+    border: 1px solid rgba(34, 197, 94, 0.12);
   }
 }
 
-/* Slide-up animation for sheet */
+/* ─── Animations ─── */
 @keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 @keyframes fadeIn {
@@ -256,25 +404,25 @@
   to { opacity: 1; }
 }
 
+@keyframes accordionDown {
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 2000px; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
 .animate-slide-up {
-  animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  animation: slideUp 0.35s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .animate-fade-in {
   animation: fadeIn 0.2s ease-out;
 }
 
-/* Accordion content animation */
-@keyframes accordionDown {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes accordionUp {
-  from { opacity: 1; transform: translateY(0); }
-  to { opacity: 0; transform: translateY(-4px); }
-}
-
 .accordion-content {
-  animation: accordionDown 0.2s ease-out;
+  animation: accordionDown 0.25s ease-out;
+  overflow: hidden;
 }

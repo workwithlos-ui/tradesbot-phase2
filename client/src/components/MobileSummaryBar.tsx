@@ -7,7 +7,6 @@ interface MobileSummaryBarProps {
   materialItemCount: number;
   laborItemCount: number;
   estimateTotal: number;
-  // Full summary data for the sheet
   jobName?: string;
   address?: string;
   shingleSquares: number;
@@ -33,7 +32,7 @@ export default function MobileSummaryBar(props: MobileSummaryBarProps) {
     <>
       {/* Sticky bottom bar — mobile only */}
       <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden">
-        <div className="bg-card border-t border-border/60 shadow-lg">
+        <div style={{ background: "rgba(26,26,26,0.95)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderTop: "1px solid var(--border)" }}>
           <button
             type="button"
             onClick={() => setSheetOpen(true)}
@@ -41,22 +40,22 @@ export default function MobileSummaryBar(props: MobileSummaryBarProps) {
           >
             <div className="flex items-center gap-3">
               <div className="flex flex-col items-start">
-                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                <span className="text-[9px] font-medium uppercase tracking-widest" style={{ color: "var(--muted-foreground)" }}>
                   Estimate Total
                 </span>
-                <span className="text-xl font-bold font-num text-primary">
+                <span className="text-xl font-bold font-num" style={{ color: "var(--primary)" }}>
                   {formatCurrency(props.estimateTotal)}
                 </span>
               </div>
               {props.laborSquares > 0 && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-secondary text-muted-foreground">
+                <span className="pill" style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }}>
                   {props.laborSquares.toFixed(1)} sq
                 </span>
               )}
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground font-medium">Summary</span>
-              <ChevronUp className="w-4 h-4 text-muted-foreground" />
+              <span className="text-[11px] font-medium" style={{ color: "var(--muted-foreground)" }}>Summary</span>
+              <ChevronUp className="w-4 h-4" style={{ color: "var(--muted-foreground)" }} />
             </div>
           </button>
         </div>
@@ -65,66 +64,65 @@ export default function MobileSummaryBar(props: MobileSummaryBarProps) {
       {/* Slide-up summary sheet */}
       {sheetOpen && (
         <>
-          {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm animate-fade-in lg:hidden"
+            className="sheet-overlay animate-fade-in lg:hidden"
             onClick={() => setSheetOpen(false)}
           />
 
-          {/* Sheet panel */}
-          <div className="fixed bottom-0 left-0 right-0 bg-card rounded-t-2xl z-50 shadow-2xl max-h-[85vh] overflow-y-auto animate-slide-up lg:hidden">
+          <div className="sheet-panel animate-slide-up lg:hidden">
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 rounded-full bg-border" />
+              <div className="w-10 h-1 rounded-full" style={{ background: "var(--border)" }} />
             </div>
 
-            <div className="flex items-center justify-between px-5 py-3 border-b border-border/60">
+            <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
               <div>
-                <h3 className="text-base font-bold">
+                <h3 className="text-base font-bold" style={{ color: "var(--foreground)" }}>
                   {props.jobName || "Estimate Summary"}
                 </h3>
                 {props.address && (
-                  <p className="text-xs text-muted-foreground mt-0.5">{props.address}</p>
+                  <p className="text-[11px] mt-0.5" style={{ color: "var(--muted-foreground)" }}>{props.address}</p>
                 )}
               </div>
               <button
                 type="button"
                 onClick={() => setSheetOpen(false)}
-                className="p-2 rounded-lg hover:bg-secondary transition-colors"
+                className="p-2 rounded-lg transition-colors"
+                style={{ color: "var(--muted-foreground)" }}
               >
-                <X className="w-4 h-4 text-muted-foreground" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="px-5 py-4 space-y-4">
               {/* Cost breakdown */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between py-2.5 border-b border-border/40">
-                  <span className="text-sm text-muted-foreground">Materials</span>
-                  <span className="text-sm font-num font-medium">{formatCurrency(props.materialsTotal)}</span>
+              <div className="space-y-0">
+                <div className="flex items-center justify-between py-2.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <span className="text-sm" style={{ color: "var(--muted-foreground)" }}>Materials</span>
+                  <span className="text-sm font-num font-medium" style={{ color: "var(--foreground)" }}>{formatCurrency(props.materialsTotal)}</span>
                 </div>
-                <div className="flex items-center justify-between py-2.5 border-b border-border/40">
-                  <span className="text-sm text-muted-foreground">Labor</span>
-                  <span className="text-sm font-num font-medium">{formatCurrency(props.laborTotal)}</span>
+                <div className="flex items-center justify-between py-2.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <span className="text-sm" style={{ color: "var(--muted-foreground)" }}>Labor</span>
+                  <span className="text-sm font-num font-medium" style={{ color: "var(--foreground)" }}>{formatCurrency(props.laborTotal)}</span>
                 </div>
-                <div className="flex items-center justify-between py-2.5 border-b border-border/40">
-                  <span className="text-sm text-muted-foreground">Additional</span>
-                  <span className="text-sm font-num font-medium">{formatCurrency(props.customCostsTotal)}</span>
+                <div className="flex items-center justify-between py-2.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <span className="text-sm" style={{ color: "var(--muted-foreground)" }}>Additional</span>
+                  <span className="text-sm font-num font-medium" style={{ color: "var(--foreground)" }}>{formatCurrency(props.customCostsTotal)}</span>
                 </div>
                 <div className="flex items-center justify-between py-3">
-                  <span className="text-base font-bold">Total Cost</span>
-                  <span className="text-xl font-bold font-num">{formatCurrency(props.estimateTotal)}</span>
+                  <span className="text-base font-bold" style={{ color: "var(--foreground)" }}>Total Cost</span>
+                  <span className="text-xl font-bold font-num" style={{ color: "var(--primary)" }}>{formatCurrency(props.estimateTotal)}</span>
                 </div>
               </div>
 
               {/* Margin calculator */}
               {hasData && (
-                <div className="bg-primary/5 border border-primary/15 rounded-xl p-4">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                <div className="surface-highlight rounded-lg p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--muted-foreground)" }}>
                     Margin Calculator
                   </p>
                   <div className="flex items-center gap-2 mb-3">
-                    <label className="text-xs text-muted-foreground shrink-0">Target:</label>
+                    <label className="text-[11px] shrink-0" style={{ color: "var(--muted-foreground)" }}>Target:</label>
                     <input
                       type="number"
                       min="0"
@@ -132,9 +130,18 @@ export default function MobileSummaryBar(props: MobileSummaryBarProps) {
                       step="1"
                       value={props.targetMarginPct}
                       onChange={(e) => props.onTargetMarginChange(parseFloat(e.target.value) || 0)}
-                      className="w-16 px-2 py-1.5 text-sm font-bold text-center border-2 border-primary rounded-lg bg-background focus:outline-none font-num"
+                      className="font-num text-sm font-bold text-center"
+                      style={{
+                        width: "56px",
+                        padding: "0.375rem",
+                        background: "var(--background)",
+                        border: "2px solid var(--primary)",
+                        borderRadius: "0.5rem",
+                        color: "var(--primary)",
+                        outline: "none",
+                      }}
                     />
-                    <span className="text-sm font-bold text-primary">%</span>
+                    <span className="text-sm font-bold" style={{ color: "var(--primary)" }}>%</span>
                   </div>
                   <div className="flex gap-1.5 flex-wrap mb-4">
                     {MARGIN_PRESETS.map((preset) => (
@@ -142,11 +149,12 @@ export default function MobileSummaryBar(props: MobileSummaryBarProps) {
                         key={preset}
                         type="button"
                         onClick={() => props.onTargetMarginChange(preset)}
-                        className={`px-2.5 py-1.5 text-xs rounded-lg border transition-all ${
-                          props.targetMarginPct === preset
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "border-border hover:border-primary/40 text-muted-foreground"
-                        }`}
+                        className="px-2.5 py-1.5 text-[11px] rounded-lg transition-all"
+                        style={{
+                          background: props.targetMarginPct === preset ? "var(--primary)" : "transparent",
+                          color: props.targetMarginPct === preset ? "var(--primary-foreground)" : "var(--muted-foreground)",
+                          border: props.targetMarginPct === preset ? "1px solid var(--primary)" : "1px solid var(--border)",
+                        }}
                       >
                         {preset}%
                       </button>
@@ -154,15 +162,15 @@ export default function MobileSummaryBar(props: MobileSummaryBarProps) {
                   </div>
                   <div className="flex items-end justify-between">
                     <div>
-                      <div className="text-xs text-muted-foreground mb-0.5">Charge customer</div>
-                      <div className="text-2xl font-bold font-num text-primary">
+                      <div className="text-[10px] mb-0.5" style={{ color: "var(--muted-foreground)" }}>Charge customer</div>
+                      <div className="text-2xl font-bold font-num" style={{ color: "var(--primary)" }}>
                         {formatCurrency(props.requiredCustomerPrice)}
                       </div>
                     </div>
                     {props.shingleSquares > 0 && (
                       <div className="text-right">
-                        <div className="text-xs text-muted-foreground mb-0.5">$/sq</div>
-                        <div className="text-lg font-bold font-num">
+                        <div className="text-[10px] mb-0.5" style={{ color: "var(--muted-foreground)" }}>$/sq</div>
+                        <div className="text-lg font-bold font-num" style={{ color: "var(--foreground)" }}>
                           {formatCurrency(props.requiredCustomerPrice / props.shingleSquares)}
                         </div>
                       </div>
@@ -176,14 +184,16 @@ export default function MobileSummaryBar(props: MobileSummaryBarProps) {
                 <button
                   type="button"
                   onClick={() => { setSheetOpen(false); props.onGeneratePdf(); }}
-                  className="flex items-center justify-center gap-2 px-4 py-3.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold active:opacity-80"
+                  className="flex items-center justify-center gap-2 px-4 py-3.5 rounded-lg text-sm font-semibold active:scale-[0.98] transition-transform"
+                  style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
                 >
                   Generate PDF
                 </button>
                 <button
                   type="button"
                   onClick={() => { setSheetOpen(false); props.onSave(); }}
-                  className="flex items-center justify-center gap-2 px-4 py-3.5 border border-border rounded-xl text-sm font-semibold hover:bg-secondary active:opacity-80"
+                  className="flex items-center justify-center gap-2 px-4 py-3.5 rounded-lg text-sm font-semibold active:scale-[0.98] transition-transform"
+                  style={{ border: "1px solid var(--border)", color: "var(--foreground)" }}
                 >
                   Save Estimate
                 </button>

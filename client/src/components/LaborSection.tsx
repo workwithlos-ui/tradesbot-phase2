@@ -23,8 +23,8 @@ export default function LaborSection(props: LaborSectionProps) {
 
   const rightContent = (
     <div className="text-right">
-      <div className="text-sm font-bold font-num text-primary">{formatCurrency(props.totalLaborCost)}</div>
-      <div className="text-xs text-muted-foreground">
+      <div className="text-sm font-bold font-num" style={{ color: "var(--primary)" }}>{formatCurrency(props.totalLaborCost)}</div>
+      <div className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>
         {props.laborSquares > 0 ? `${props.laborSquares.toFixed(1)} sq` : "0 sq"}
         {activeCount > 0 ? ` · ${activeCount} extras` : ""}
       </div>
@@ -37,40 +37,40 @@ export default function LaborSection(props: LaborSectionProps) {
       title="Labor"
       subtitle={
         props.laborSquares > 0
-          ? `${props.laborSquares.toFixed(1)} labor sq × $${baseRate}/sq = ${formatCurrency(props.baseLaborCost)}`
-          : "Fill in materials first to auto-populate labor squares"
+          ? `${props.laborSquares.toFixed(1)} sq × $${baseRate}/sq = ${formatCurrency(props.baseLaborCost)}`
+          : "Fill in materials first"
       }
       rightContent={rightContent}
       defaultOpen={true}
     >
       {/* Base Labor */}
       <div className="mb-5">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Base Labor</p>
-        <div className="bg-primary/5 border border-primary/15 rounded-xl p-4">
+        <p className="text-[10px] font-semibold uppercase tracking-widest mb-2.5" style={{ color: "var(--muted-foreground)" }}>Base Labor</p>
+        <div className="surface-highlight rounded-lg p-4">
           <div className="flex items-start justify-between gap-3 mb-2">
             <div className="flex-1">
-              <div className="text-sm font-semibold">Base Labor Rate</div>
-              <div className="text-xs text-muted-foreground mt-0.5">
+              <div className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>Base Labor Rate</div>
+              <div className="text-[11px] mt-0.5" style={{ color: "var(--muted-foreground)" }}>
                 {props.laborSquares.toFixed(1)} sq × ${baseRate}/sq
               </div>
             </div>
-            <div className="text-lg font-bold font-num text-primary shrink-0">
+            <div className="text-lg font-bold font-num shrink-0" style={{ color: "var(--primary)" }}>
               {formatCurrency(props.baseLaborCost)}
             </div>
           </div>
-          <p className="text-[11px] text-muted-foreground leading-relaxed mb-3">
+          <p className="text-[10px] leading-relaxed mb-3" style={{ color: "var(--muted-foreground)" }}>
             Tear off, install shingles, underlayment, ice/water shield, drip edges, valley metal, pipe jacks, haul off & clean up
           </p>
           <div className="flex items-center gap-2">
-            <label className="text-xs text-muted-foreground shrink-0">$/sq:</label>
+            <label className="text-[10px] shrink-0" style={{ color: "var(--muted-foreground)" }}>$/sq:</label>
             <input
               type="number"
               min="0"
               step="1"
               value={baseRate}
               onChange={(e) => props.onLaborCostChange("base-labor", parseFloat(e.target.value) || 0)}
-              className="w-24 px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary/50 font-num transition-colors"
-              style={{ minHeight: "40px" }}
+              className="num-input"
+              style={{ width: "96px" }}
             />
           </div>
         </div>
@@ -79,18 +79,18 @@ export default function LaborSection(props: LaborSectionProps) {
       {/* Steep Pitch Adder */}
       {props.steepPitchAdder > 0 && (
         <div className="mb-5">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Steep Pitch Adder</p>
-          <div className="bg-amber-50 border border-amber-200/80 rounded-xl p-4">
+          <p className="text-[10px] font-semibold uppercase tracking-widest mb-2.5" style={{ color: "var(--muted-foreground)" }}>Steep Pitch Adder</p>
+          <div className="surface-warn rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold">Steep Pitch Surcharge</span>
-              <span className="text-sm font-bold font-num">{formatCurrency(props.steepPitchAdder)}</span>
+              <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>Steep Pitch Surcharge</span>
+              <span className="text-sm font-bold font-num" style={{ color: "#FBBF24" }}>{formatCurrency(props.steepPitchAdder)}</span>
             </div>
             <div className="space-y-1">
               {STEEP_PITCH_TIERS.map((tier) => {
                 const sq = props.steepPitchSquares[tier.id] || 0;
                 if (sq <= 0) return null;
                 return (
-                  <div key={tier.id} className="text-xs text-muted-foreground flex justify-between">
+                  <div key={tier.id} className="text-[11px] flex justify-between" style={{ color: "var(--muted-foreground)" }}>
                     <span>{tier.label}: {sq} sq × ${tier.adderPerSquare}/sq</span>
                     <span className="font-num font-medium">{formatCurrency(sq * tier.adderPerSquare)}</span>
                   </div>
@@ -103,8 +103,8 @@ export default function LaborSection(props: LaborSectionProps) {
 
       {/* Additional Labor Items */}
       <div>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Additional Items</p>
-        <p className="text-xs text-muted-foreground mb-3">Enter quantity and rate for each applicable item.</p>
+        <p className="text-[10px] font-semibold uppercase tracking-widest mb-2.5" style={{ color: "var(--muted-foreground)" }}>Additional Items</p>
+        <p className="text-[11px] mb-3" style={{ color: "var(--muted-foreground)" }}>Enter quantity and rate for each applicable item.</p>
 
         <div className="space-y-2">
           {nonBaseItems.map((item) => {
@@ -116,21 +116,22 @@ export default function LaborSection(props: LaborSectionProps) {
             return (
               <div
                 key={item.id}
-                className={`rounded-xl border transition-colors ${
-                  isActive ? "border-primary/20 bg-primary/3" : "border-border/60 bg-background"
-                }`}
+                className="rounded-lg transition-all"
+                style={{
+                  background: isActive ? "rgba(0,212,170,0.04)" : "var(--background)",
+                  border: isActive ? "1px solid rgba(0,212,170,0.15)" : "1px solid var(--border)",
+                }}
               >
-                {/* Mobile: stacked layout */}
                 <div className="p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">{item.name}</span>
+                    <span className="text-[13px] font-medium" style={{ color: "var(--foreground)" }}>{item.name}</span>
                     {isActive && (
-                      <span className="text-sm font-bold font-num text-primary">{formatCurrency(lineTotal)}</span>
+                      <span className="text-[13px] font-bold font-num" style={{ color: "var(--primary)" }}>{formatCurrency(lineTotal)}</span>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex-1">
-                      <label className="text-[10px] text-muted-foreground">Qty ({item.unit})</label>
+                      <label className="text-[9px] uppercase tracking-wider" style={{ color: "var(--muted-foreground)" }}>Qty ({item.unit})</label>
                       <input
                         type="number"
                         min="0"
@@ -138,12 +139,11 @@ export default function LaborSection(props: LaborSectionProps) {
                         placeholder="0"
                         value={qty || ""}
                         onChange={(e) => props.onLaborQtyChange(item.id, parseFloat(e.target.value) || 0)}
-                        className="w-full px-3 py-2 text-sm text-right border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary/50 font-num transition-colors mt-0.5"
-                        style={{ minHeight: "40px" }}
+                        className="num-input mt-1"
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="text-[10px] text-muted-foreground">$/unit</label>
+                      <label className="text-[9px] uppercase tracking-wider" style={{ color: "var(--muted-foreground)" }}>$/unit</label>
                       <input
                         type="number"
                         min="0"
@@ -151,8 +151,7 @@ export default function LaborSection(props: LaborSectionProps) {
                         placeholder="0"
                         value={cost || ""}
                         onChange={(e) => props.onLaborCostChange(item.id, parseFloat(e.target.value) || 0)}
-                        className="w-full px-3 py-2 text-sm text-right border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary/50 font-num transition-colors mt-0.5"
-                        style={{ minHeight: "40px" }}
+                        className="num-input mt-1"
                       />
                     </div>
                   </div>
@@ -164,9 +163,9 @@ export default function LaborSection(props: LaborSectionProps) {
       </div>
 
       {/* Labor Total */}
-      <div className="mt-5 pt-4 border-t border-border flex items-center justify-between">
-        <span className="text-sm font-semibold">Labor Total</span>
-        <span className="text-lg font-bold font-num text-primary">{formatCurrency(props.totalLaborCost)}</span>
+      <div className="mt-5 pt-4 flex items-center justify-between" style={{ borderTop: "1px solid var(--border)" }}>
+        <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>Labor Total</span>
+        <span className="text-lg font-bold font-num" style={{ color: "var(--primary)" }}>{formatCurrency(props.totalLaborCost)}</span>
       </div>
     </SectionAccordion>
   );

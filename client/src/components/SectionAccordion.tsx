@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 interface SectionAccordionProps {
   icon: ReactNode;
@@ -30,20 +30,26 @@ export default function SectionAccordion({
         type="button"
       >
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0 text-primary">
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+            style={{ background: "rgba(0,212,170,0.08)", color: "var(--primary)" }}
+          >
             {icon}
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-foreground">{title}</span>
+              <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>{title}</span>
               {badge && (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-primary/10 text-primary">
+                <span
+                  className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium"
+                  style={{ background: "rgba(0,212,170,0.1)", color: "var(--primary)" }}
+                >
                   {badge}
                 </span>
               )}
             </div>
             {subtitle && (
-              <p className="text-xs text-muted-foreground mt-0.5 truncate">{subtitle}</p>
+              <p className="text-[11px] mt-0.5 truncate" style={{ color: "var(--muted-foreground)" }}>{subtitle}</p>
             )}
           </div>
         </div>
@@ -51,16 +57,18 @@ export default function SectionAccordion({
           {rightContent && (
             <div className="text-right">{rightContent}</div>
           )}
-          <ChevronDown
-            className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${
-              isOpen ? "rotate-180" : ""
-            }`}
+          <ChevronRight
+            className="w-4 h-4 transition-transform duration-200"
+            style={{
+              color: "var(--muted-foreground)",
+              transform: isOpen ? "rotate(90deg)" : "rotate(0deg)",
+            }}
           />
         </div>
       </button>
 
       {isOpen && (
-        <div className="accordion-content border-t border-border/60 px-5 py-4">
+        <div className="accordion-content px-5 py-4" style={{ borderTop: "1px solid var(--border)" }}>
           {children}
         </div>
       )}

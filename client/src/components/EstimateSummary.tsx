@@ -52,22 +52,22 @@ export default function EstimateSummary(props: EstimateSummaryProps) {
       <div className="space-y-3">
         {/* Main summary card */}
         <div className="section-card">
-          <div className="px-5 py-4 border-b border-border/60">
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+          <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
+            <div className="text-[10px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--muted-foreground)" }}>
               {props.state.jobName || "Estimate Summary"}
             </div>
             {props.state.address && (
-              <div className="text-xs text-muted-foreground">{props.state.address}</div>
+              <div className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>{props.state.address}</div>
             )}
             {(shingleName || supplierName) && (
               <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                 {supplierName && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-secondary text-muted-foreground">
+                  <span className="pill" style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }}>
                     {supplierName}
                   </span>
                 )}
                 {shingleName && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-primary/10 text-primary">
+                  <span className="pill" style={{ background: "rgba(0,212,170,0.1)", color: "var(--primary)" }}>
                     {shingleName}
                   </span>
                 )}
@@ -77,69 +77,69 @@ export default function EstimateSummary(props: EstimateSummaryProps) {
 
           <div className="px-5 py-4 space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Shingle Squares</span>
-              <span className="font-num font-medium">{props.shingleSquares.toFixed(1)}</span>
+              <span style={{ color: "var(--muted-foreground)" }}>Shingle Squares</span>
+              <span className="font-num font-medium" style={{ color: "var(--foreground)" }}>{props.shingleSquares.toFixed(1)}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Labor Squares</span>
-              <span className="font-num font-medium">{props.laborSquares.toFixed(1)}</span>
+              <span style={{ color: "var(--muted-foreground)" }}>Labor Squares</span>
+              <span className="font-num font-medium" style={{ color: "var(--foreground)" }}>{props.laborSquares.toFixed(1)}</span>
             </div>
 
-            <div className="border-t border-border/40 pt-2 mt-2 space-y-2">
+            <div className="pt-2 mt-2 space-y-2" style={{ borderTop: "1px solid var(--border)" }}>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 inline-block" />
+                <span className="flex items-center gap-1.5" style={{ color: "var(--muted-foreground)" }}>
+                  <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "var(--primary)" }} />
                   Materials ({props.materialItemCount})
                 </span>
-                <span className="font-num font-medium">{formatCurrency(props.totalMaterialCost)}</span>
+                <span className="font-num font-medium" style={{ color: "var(--foreground)" }}>{formatCurrency(props.totalMaterialCost)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
+                <span className="flex items-center gap-1.5" style={{ color: "var(--muted-foreground)" }}>
+                  <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#FBBF24" }} />
                   Labor
                 </span>
-                <span className="font-num font-medium">{formatCurrency(props.totalLaborCost)}</span>
+                <span className="font-num font-medium" style={{ color: "var(--foreground)" }}>{formatCurrency(props.totalLaborCost)}</span>
               </div>
               {props.steepPitchAdder > 0 && (
-                <div className="flex items-center justify-between text-xs text-muted-foreground pl-3">
+                <div className="flex items-center justify-between text-[11px] pl-3" style={{ color: "var(--muted-foreground)" }}>
                   <span>Steep pitch adder</span>
                   <span className="font-num">{formatCurrency(props.steepPitchAdder)}</span>
                 </div>
               )}
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                <span className="flex items-center gap-1.5" style={{ color: "var(--muted-foreground)" }}>
+                  <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#A78BFA" }} />
                   Additional
                 </span>
-                <span className="font-num font-medium">{formatCurrency(props.totalCustomCosts)}</span>
+                <span className="font-num font-medium" style={{ color: "var(--foreground)" }}>{formatCurrency(props.totalCustomCosts)}</span>
               </div>
-              <div className="flex items-center justify-between text-xs text-muted-foreground pl-3">
+              <div className="flex items-center justify-between text-[11px] pl-3" style={{ color: "var(--muted-foreground)" }}>
                 <span>Tarp System (fixed)</span>
                 <span className="font-num">{formatCurrency(TARP_SYSTEM_CHARGE)}</span>
               </div>
               {props.state.deliveryEnabled && (
-                <div className="flex items-center justify-between text-xs text-muted-foreground pl-3">
+                <div className="flex items-center justify-between text-[11px] pl-3" style={{ color: "var(--muted-foreground)" }}>
                   <span>Delivery</span>
                   <span className="font-num">{formatCurrency(props.state.deliveryCost)}</span>
                 </div>
               )}
               {additionalCostsTotal > 0 && (
-                <div className="flex items-center justify-between text-xs text-muted-foreground pl-3">
+                <div className="flex items-center justify-between text-[11px] pl-3" style={{ color: "var(--muted-foreground)" }}>
                   <span>Custom items</span>
                   <span className="font-num">{formatCurrency(additionalCostsTotal)}</span>
                 </div>
               )}
             </div>
 
-            <div className="border-t border-border pt-3">
+            <div className="pt-3" style={{ borderTop: "1px solid var(--border)" }}>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold">Total Cost</span>
-                <span className="text-2xl font-bold font-num text-primary">
+                <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>Total Cost</span>
+                <span className="text-2xl font-bold font-num" style={{ color: "var(--primary)" }}>
                   {formatCurrency(props.estimateTotal)}
                 </span>
               </div>
               {props.shingleSquares > 0 && (
-                <div className="flex justify-between text-xs text-muted-foreground mt-0.5">
+                <div className="flex justify-between text-[11px] mt-0.5" style={{ color: "var(--muted-foreground)" }}>
                   <span>Cost per square</span>
                   <span className="font-num">{formatCurrency(props.costPerSquare)}/sq</span>
                 </div>
@@ -156,19 +156,19 @@ export default function EstimateSummary(props: EstimateSummaryProps) {
             onClick={() => setMarginExpanded(!marginExpanded)}
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center text-primary">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(0,212,170,0.08)", color: "var(--primary)" }}>
                 <TrendingUp className="w-4 h-4" />
               </div>
-              <span className="text-sm font-semibold">Margin Calculator</span>
+              <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>Margin Calculator</span>
             </div>
             <ChevronDown
-              className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${marginExpanded ? "rotate-180" : ""}`}
+              className="w-4 h-4 transition-transform duration-200"
+              style={{ color: "var(--muted-foreground)", transform: marginExpanded ? "rotate(180deg)" : "rotate(0deg)" }}
             />
           </button>
 
           {marginExpanded && (
-            <div className="border-t border-border/60 px-5 py-4 space-y-4">
-              {/* Target margin input */}
+            <div className="px-5 py-4 space-y-4" style={{ borderTop: "1px solid var(--border)" }}>
               <div>
                 <label className="field-label">Target Gross Margin</label>
                 <div className="flex items-center gap-2 mb-2.5">
@@ -179,9 +179,18 @@ export default function EstimateSummary(props: EstimateSummaryProps) {
                     step="1"
                     value={props.state.targetMarginPct}
                     onChange={(e) => props.onTargetMarginChange(parseFloat(e.target.value) || 0)}
-                    className="w-20 px-3 py-2 text-xl font-bold text-center border-2 border-primary rounded-xl bg-background focus:outline-none font-num"
+                    className="font-num text-xl font-bold text-center"
+                    style={{
+                      width: "72px",
+                      padding: "0.5rem",
+                      background: "var(--background)",
+                      border: "2px solid var(--primary)",
+                      borderRadius: "0.75rem",
+                      color: "var(--primary)",
+                      outline: "none",
+                    }}
                   />
-                  <span className="text-xl font-bold text-primary">%</span>
+                  <span className="text-xl font-bold" style={{ color: "var(--primary)" }}>%</span>
                 </div>
                 <div className="flex gap-1.5 flex-wrap">
                   {MARGIN_PRESETS.map((preset) => (
@@ -189,11 +198,12 @@ export default function EstimateSummary(props: EstimateSummaryProps) {
                       key={preset}
                       type="button"
                       onClick={() => props.onTargetMarginChange(preset)}
-                      className={`px-2.5 py-1.5 text-xs rounded-lg border transition-all ${
-                        props.state.targetMarginPct === preset
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "border-border hover:border-primary/40 text-muted-foreground"
-                      }`}
+                      className="px-2.5 py-1.5 text-[11px] rounded-lg transition-all"
+                      style={{
+                        background: props.state.targetMarginPct === preset ? "var(--primary)" : "transparent",
+                        color: props.state.targetMarginPct === preset ? "var(--primary-foreground)" : "var(--muted-foreground)",
+                        border: props.state.targetMarginPct === preset ? "1px solid var(--primary)" : "1px solid var(--border)",
+                      }}
                     >
                       {preset}%
                     </button>
@@ -203,35 +213,35 @@ export default function EstimateSummary(props: EstimateSummaryProps) {
 
               {hasData ? (
                 <div className="space-y-3">
-                  <div className="bg-primary/5 border border-primary/15 rounded-xl p-4">
-                    <div className="text-xs text-muted-foreground mb-1">Charge customer</div>
-                    <div className="text-2xl font-bold font-num text-primary">
+                  <div className="surface-highlight rounded-lg p-4">
+                    <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: "var(--muted-foreground)" }}>Charge customer</div>
+                    <div className="text-2xl font-bold font-num" style={{ color: "var(--primary)" }}>
                       {formatCurrency(props.requiredCustomerPrice)}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">
+                    <div className="text-[11px] mt-1" style={{ color: "var(--muted-foreground)" }}>
                       For {props.state.targetMarginPct}% gross margin
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-secondary/60 rounded-xl p-3 text-center">
-                      <div className="text-[10px] font-medium text-muted-foreground mb-1">Your Cost/sq</div>
-                      <div className="text-base font-bold font-num">{formatCurrency(props.costPerSquare)}</div>
+                    <div className="rounded-lg p-3 text-center" style={{ background: "var(--secondary)" }}>
+                      <div className="text-[9px] font-medium uppercase tracking-wider mb-1" style={{ color: "var(--muted-foreground)" }}>Your Cost/sq</div>
+                      <div className="text-base font-bold font-num" style={{ color: "var(--foreground)" }}>{formatCurrency(props.costPerSquare)}</div>
                     </div>
-                    <div className="bg-primary/5 rounded-xl p-3 text-center">
-                      <div className="text-[10px] font-medium text-muted-foreground mb-1">Charge/sq</div>
-                      <div className="text-base font-bold font-num text-primary">{formatCurrency(props.pricePerSquare)}</div>
+                    <div className="surface-highlight rounded-lg p-3 text-center">
+                      <div className="text-[9px] font-medium uppercase tracking-wider mb-1" style={{ color: "var(--muted-foreground)" }}>Charge/sq</div>
+                      <div className="text-base font-bold font-num" style={{ color: "var(--primary)" }}>{formatCurrency(props.pricePerSquare)}</div>
                     </div>
                   </div>
 
                   {/* Comparison table */}
-                  <div className="border border-border/60 rounded-xl overflow-hidden">
-                    <table className="w-full text-xs">
+                  <div className="rounded-lg overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+                    <table className="w-full text-[11px]">
                       <thead>
-                        <tr className="bg-secondary/40">
-                          <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Margin</th>
-                          <th className="text-right px-3 py-2 font-semibold text-muted-foreground">Price</th>
-                          <th className="text-right px-3 py-2 font-semibold text-muted-foreground">$/sq</th>
+                        <tr style={{ background: "var(--secondary)" }}>
+                          <th className="text-left px-3 py-2 font-semibold" style={{ color: "var(--muted-foreground)" }}>Margin</th>
+                          <th className="text-right px-3 py-2 font-semibold" style={{ color: "var(--muted-foreground)" }}>Price</th>
+                          <th className="text-right px-3 py-2 font-semibold" style={{ color: "var(--muted-foreground)" }}>$/sq</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -240,10 +250,10 @@ export default function EstimateSummary(props: EstimateSummaryProps) {
                           const pps = props.shingleSquares > 0 ? price / props.shingleSquares : 0;
                           const isTarget = m === props.state.targetMarginPct;
                           return (
-                            <tr key={m} className={isTarget ? "bg-primary/5" : ""}>
-                              <td className={`px-3 py-2 ${isTarget ? "text-primary font-bold" : ""}`}>{m}%</td>
-                              <td className={`px-3 py-2 text-right font-num ${isTarget ? "text-primary font-bold" : ""}`}>{formatCurrency(price)}</td>
-                              <td className={`px-3 py-2 text-right font-num ${isTarget ? "text-primary font-bold" : ""}`}>{formatCurrency(pps)}</td>
+                            <tr key={m} style={{ background: isTarget ? "rgba(0,212,170,0.06)" : "transparent" }}>
+                              <td className="px-3 py-2" style={{ color: isTarget ? "var(--primary)" : "var(--muted-foreground)", fontWeight: isTarget ? 700 : 400 }}>{m}%</td>
+                              <td className="px-3 py-2 text-right font-num" style={{ color: isTarget ? "var(--primary)" : "var(--foreground)", fontWeight: isTarget ? 700 : 400 }}>{formatCurrency(price)}</td>
+                              <td className="px-3 py-2 text-right font-num" style={{ color: isTarget ? "var(--primary)" : "var(--foreground)", fontWeight: isTarget ? 700 : 400 }}>{formatCurrency(pps)}</td>
                             </tr>
                           );
                         })}
@@ -252,33 +262,34 @@ export default function EstimateSummary(props: EstimateSummaryProps) {
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-5 border border-dashed border-border/60 rounded-xl">
-                  <p className="text-xs text-muted-foreground">Enter materials and labor to see margin calculations</p>
+                <div className="text-center py-5 rounded-lg" style={{ border: "1px dashed var(--border)" }}>
+                  <p className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>Enter materials and labor to see margin calculations</p>
                 </div>
               )}
 
               {/* Insurance scope check */}
-              <div className="pt-3 border-t border-border/60">
+              <div className="pt-3" style={{ borderTop: "1px solid var(--border)" }}>
                 <button
                   type="button"
                   className="flex items-center justify-between w-full mb-3"
                   onClick={() => setInsuranceExpanded(!insuranceExpanded)}
                 >
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer">
+                  <label className="text-[10px] font-semibold uppercase tracking-widest cursor-pointer" style={{ color: "var(--muted-foreground)" }}>
                     Insurance Scope Check
                   </label>
                   <ChevronDown
-                    className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${insuranceExpanded ? "rotate-180" : ""}`}
+                    className="w-3.5 h-3.5 transition-transform"
+                    style={{ color: "var(--muted-foreground)", transform: insuranceExpanded ? "rotate(180deg)" : "rotate(0deg)" }}
                   />
                 </button>
 
                 {insuranceExpanded && (
                   <div className="space-y-3">
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>
                       Enter the insurance scope price to see your actual margin.
                     </p>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">$</span>
+                      <span className="text-sm" style={{ color: "var(--muted-foreground)" }}>$</span>
                       <input
                         type="number"
                         min="0"
@@ -286,39 +297,45 @@ export default function EstimateSummary(props: EstimateSummaryProps) {
                         placeholder="0.00"
                         value={props.state.insuranceScopePrice || ""}
                         onChange={(e) => props.onInsuranceScopePriceChange(parseFloat(e.target.value) || 0)}
-                        className="flex-1 px-3 py-2.5 text-sm border border-input rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-ring/30 font-num"
+                        className="num-input flex-1"
                       />
                     </div>
 
                     {props.state.insuranceScopePrice > 0 && hasData && (
-                      <div className={`rounded-xl p-3.5 border ${scopeIsGood ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}>
+                      <div
+                        className="rounded-lg p-3.5"
+                        style={{
+                          background: scopeIsGood ? "rgba(34,197,94,0.06)" : "rgba(239,68,68,0.06)",
+                          border: scopeIsGood ? "1px solid rgba(34,197,94,0.15)" : "1px solid rgba(239,68,68,0.15)",
+                        }}
+                      >
                         <div className="flex items-center gap-2 mb-2">
-                          <span className={`text-sm font-semibold ${scopeIsGood ? "text-emerald-700" : "text-red-700"}`}>
-                            {scopeIsGood ? "✓ Scope looks good!" : "⚠ Below target margin"}
+                          <span className="text-sm font-semibold" style={{ color: scopeIsGood ? "#22C55E" : "#EF4444" }}>
+                            {scopeIsGood ? "Scope looks good" : "Below target margin"}
                           </span>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="grid grid-cols-2 gap-2 text-[11px]">
                           <div>
-                            <span className="text-muted-foreground">Scope price:</span>
-                            <span className="font-bold ml-1">{formatCurrency(props.state.insuranceScopePrice)}</span>
+                            <span style={{ color: "var(--muted-foreground)" }}>Scope price:</span>
+                            <span className="font-bold ml-1" style={{ color: "var(--foreground)" }}>{formatCurrency(props.state.insuranceScopePrice)}</span>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Scope $/sq:</span>
-                            <span className="font-bold ml-1">{formatCurrency(props.insuranceScopePerSquare)}</span>
+                            <span style={{ color: "var(--muted-foreground)" }}>Scope $/sq:</span>
+                            <span className="font-bold ml-1" style={{ color: "var(--foreground)" }}>{formatCurrency(props.insuranceScopePerSquare)}</span>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Actual margin:</span>
-                            <span className={`font-bold ml-1 ${scopeIsGood ? "text-emerald-700" : "text-red-700"}`}>
+                            <span style={{ color: "var(--muted-foreground)" }}>Actual margin:</span>
+                            <span className="font-bold ml-1" style={{ color: scopeIsGood ? "#22C55E" : "#EF4444" }}>
                               {props.insuranceScopeMargin.toFixed(1)}%
                             </span>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Target:</span>
-                            <span className="font-bold ml-1">{props.state.targetMarginPct}%</span>
+                            <span style={{ color: "var(--muted-foreground)" }}>Target:</span>
+                            <span className="font-bold ml-1" style={{ color: "var(--foreground)" }}>{props.state.targetMarginPct}%</span>
                           </div>
                         </div>
                         {scopeIsBad && (
-                          <p className="text-xs text-red-700 font-medium mt-2">
+                          <p className="text-[11px] font-medium mt-2" style={{ color: "#EF4444" }}>
                             {(props.state.targetMarginPct - props.insuranceScopeMargin).toFixed(1)}% below target — need {formatCurrency(props.requiredCustomerPrice)} to hit {props.state.targetMarginPct}%
                           </p>
                         )}
@@ -334,12 +351,13 @@ export default function EstimateSummary(props: EstimateSummaryProps) {
         {/* Documents */}
         <div className="section-card">
           <div className="px-5 py-4">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Documents</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--muted-foreground)" }}>Documents</p>
             <div className="space-y-2">
               <button
                 type="button"
                 onClick={props.onGeneratePdf}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity active:opacity-80"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold transition-all active:scale-[0.98]"
+                style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
               >
                 <FileText className="w-4 h-4" />
                 Generate Estimate PDF
@@ -348,7 +366,8 @@ export default function EstimateSummary(props: EstimateSummaryProps) {
                 <button
                   type="button"
                   onClick={() => setMaterialOrderOpen(true)}
-                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 border border-border rounded-xl text-xs font-medium hover:bg-secondary transition-colors"
+                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-[11px] font-medium transition-all"
+                  style={{ border: "1px solid var(--border)", color: "var(--foreground)" }}
                 >
                   <Package className="w-3.5 h-3.5" />
                   Material Order
@@ -356,7 +375,8 @@ export default function EstimateSummary(props: EstimateSummaryProps) {
                 <button
                   type="button"
                   onClick={() => setWorkOrderOpen(true)}
-                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 border border-border rounded-xl text-xs font-medium hover:bg-secondary transition-colors"
+                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-[11px] font-medium transition-all"
+                  style={{ border: "1px solid var(--border)", color: "var(--foreground)" }}
                 >
                   <Wrench className="w-3.5 h-3.5" />
                   Work Order
@@ -365,7 +385,8 @@ export default function EstimateSummary(props: EstimateSummaryProps) {
               <button
                 type="button"
                 onClick={props.onSave}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-border rounded-xl text-sm font-medium hover:bg-secondary transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all"
+                style={{ border: "1px solid var(--border)", color: "var(--foreground)" }}
               >
                 <Save className="w-4 h-4" />
                 Save Estimate
@@ -373,7 +394,8 @@ export default function EstimateSummary(props: EstimateSummaryProps) {
               <button
                 type="button"
                 onClick={props.onReset}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm transition-colors"
+                style={{ color: "var(--muted-foreground)" }}
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 Reset Form

@@ -1,18 +1,5 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import AppHeader from "@/components/AppHeader";
 import {
   getSavedEstimates,
@@ -39,9 +26,11 @@ import {
   BASE_LABOR_RATE,
   TARP_SYSTEM_CHARGE,
 } from "@/lib/data";
+import { formatCurrency } from "@/lib/utils";
 
 export default function Estimates() {
   const [estimates, setEstimates] = useState<SavedEstimate[]>([]);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   useEffect(() => {
     setEstimates(getSavedEstimates());
@@ -50,7 +39,8 @@ export default function Estimates() {
   const handleDelete = (id: string, name: string) => {
     deleteEstimate(id);
     setEstimates(getSavedEstimates());
-    toast.success('"' + name + '" deleted.');
+    setDeleteConfirm(null);
+    toast.success(`"${name}" deleted.`);
   };
 
   const handleRegenPdf = (estimate: SavedEstimate) => {
@@ -69,14 +59,11 @@ export default function Estimates() {
       additionalLabor += qty * cost;
     }
     const totalLaborCost = baseCost + steepPitchAdder + additionalLabor;
-
-    // Calculate additional costs: tarp + delivery + free-form items
     const tarpCharge = TARP_SYSTEM_CHARGE;
     const deliveryCostTotal = state.deliveryEnabled ? (state.deliveryCost || 0) : 0;
     const additionalCosts = state.additionalCosts || [];
     const additionalCostsTotal = additionalCosts.reduce((sum: number, item: { amount?: number }) => sum + (item.amount || 0), 0);
     const totalCustomCosts = tarpCharge + deliveryCostTotal + additionalCostsTotal;
-
     const estimateTotal = totalMaterialCost + totalLaborCost + totalCustomCosts;
 
     generateEstimatePdf({
@@ -95,7 +82,7 @@ export default function Estimates() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--background)" }}>
       <AppHeader />
 
       <main className="flex-1 container py-6">
@@ -103,17 +90,20 @@ export default function Estimates() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <Link href="/">
-                <Button variant="ghost" size="sm" className="gap-1.5">
+                <button
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                  style={{ color: "var(--muted-foreground)", border: "1px solid var(--border)" }}
+                >
                   <ArrowLeft className="w-4 h-4" />
                   Back
-                </Button>
+                </button>
               </Link>
               <div>
-                <h2 className="text-xl font-bold flex items-center gap-2">
-                  <ClipboardList className="w-5 h-5 text-primary" />
+                <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: "var(--foreground)" }}>
+                  <ClipboardList className="w-5 h-5" style={{ color: "var(--primary)" }} />
                   Saved Estimates
                 </h2>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>
                   {estimates.length} estimate{estimates.length !== 1 ? "s" : ""} saved
                 </p>
               </div>
@@ -121,96 +111,97 @@ export default function Estimates() {
           </div>
 
           {estimates.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                <ClipboardList className="w-12 h-12 text-muted-foreground/40 mb-4" />
-                <h3 className="text-lg font-semibold text-foreground mb-1">
-                  No saved estimates
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4 max-w-sm">
-                  Create an estimate on the main page and click "Save Estimate" to see it here.
-                </p>
-                <Link href="/">
-                  <Button size="sm">Create Estimate</Button>
-                </Link>
-              </CardContent>
-            </Card>
+            <div className="section-card flex flex-col items-center justify-center py-16 text-center">
+              <ClipboardList className="w-12 h-12 mb-4" style={{ color: "var(--muted-foreground)", opacity: 0.4 }} />
+              <h3 className="text-base font-semibold mb-1" style={{ color: "var(--foreground)" }}>No saved estimates</h3>
+              <p className="text-[11px] mb-4 max-w-sm" style={{ color: "var(--muted-foreground)" }}>
+                Create an estimate on the main page and click "Save Estimate" to see it here.
+              </p>
+              <Link href="/">
+                <button
+                  className="px-4 py-2.5 rounded-lg text-sm font-semibold transition-all"
+                  style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
+                >
+                  Create Estimate
+                </button>
+              </Link>
+            </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {estimates.map((estimate) => (
-                <Card key={estimate.id} className="shadow-sm hover:shadow-md transition-shadow">
-                  <CardContent className="py-4">
+                <div key={estimate.id} className="section-card">
+                  <div className="px-5 py-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-semibold text-foreground truncate">
+                        <h3 className="text-sm font-semibold truncate" style={{ color: "var(--foreground)" }}>
                           {estimate.name}
                         </h3>
                         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5">
                           {estimate.customerName && (
-                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1 text-[11px]" style={{ color: "var(--muted-foreground)" }}>
                               <User className="w-3 h-3" />
                               {estimate.customerName}
                             </span>
                           )}
                           {estimate.address && (
-                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1 text-[11px]" style={{ color: "var(--muted-foreground)" }}>
                               <MapPin className="w-3 h-3" />
                               {estimate.address}
                             </span>
                           )}
-                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1 text-[11px]" style={{ color: "var(--muted-foreground)" }}>
                             <Calendar className="w-3 h-3" />
                             {new Date(estimate.createdAt).toLocaleDateString()}
                           </span>
                         </div>
-                        <div className="flex gap-3 mt-2">
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                        <div className="flex gap-2 mt-2">
+                          <span className="pill" style={{ background: "rgba(0,212,170,0.1)", color: "var(--primary)" }}>
                             {estimate.totalSquares.toFixed(1)} sq
                           </span>
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground font-semibold">
-                            ${estimate.estimateTotal.toFixed(2)}
+                          <span className="pill font-num font-bold" style={{ background: "var(--secondary)", color: "var(--foreground)" }}>
+                            {formatCurrency(estimate.estimateTotal)}
                           </span>
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 text-xs gap-1"
+                        <button
                           onClick={() => handleRegenPdf(estimate)}
+                          className="flex items-center gap-1 px-2.5 py-2 rounded-lg text-[11px] font-medium transition-colors"
+                          style={{ border: "1px solid var(--border)", color: "var(--foreground)" }}
                         >
                           <FileText className="w-3 h-3" />
                           PDF
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 text-xs text-destructive hover:text-destructive"
+                        </button>
+                        {deleteConfirm === estimate.id ? (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleDelete(estimate.id, estimate.name)}
+                              className="px-2.5 py-2 rounded-lg text-[11px] font-medium transition-colors"
+                              style={{ background: "#EF4444", color: "#fff" }}
                             >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Estimate</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete "{estimate.name}"? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(estimate.id, estimate.name)}>
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => setDeleteConfirm(null)}
+                              className="px-2.5 py-2 rounded-lg text-[11px] font-medium transition-colors"
+                              style={{ border: "1px solid var(--border)", color: "var(--muted-foreground)" }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setDeleteConfirm(estimate.id)}
+                            className="p-2 rounded-lg transition-colors"
+                            style={{ color: "#EF4444", border: "1px solid var(--border)" }}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))}
             </div>
           )}

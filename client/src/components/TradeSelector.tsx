@@ -16,7 +16,7 @@ interface TradeSelectorProps {
 
 export default function TradeSelector({ selectedTrade, onTradeChange }: TradeSelectorProps) {
   return (
-    <div className="border-b border-border/60 bg-background">
+    <div className="border-b border-border" style={{ background: "var(--background)" }}>
       <div className="container">
         <div className="flex gap-1 overflow-x-auto py-2" style={{ scrollbarWidth: "none" }}>
           {TRADE_OPTIONS.map((trade) => {
@@ -27,18 +27,17 @@ export default function TradeSelector({ selectedTrade, onTradeChange }: TradeSel
                 key={trade.id}
                 onClick={() => isAvailable && onTradeChange(trade.id)}
                 disabled={!isAvailable}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all shrink-0 ${
-                  isSelected
-                    ? "bg-primary text-primary-foreground"
-                    : isAvailable
-                    ? "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                    : "text-muted-foreground/35 cursor-not-allowed"
-                }`}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all shrink-0"
+                style={{
+                  background: isSelected ? "var(--primary)" : "transparent",
+                  color: isSelected ? "var(--primary-foreground)" : isAvailable ? "var(--muted-foreground)" : "rgba(120,113,108,0.3)",
+                  cursor: isAvailable ? "pointer" : "not-allowed",
+                }}
               >
                 {isAvailable ? TRADE_ICONS[trade.id] : <Lock className="w-3 h-3" />}
                 <span>{trade.name}</span>
                 {!isAvailable && (
-                  <span className="text-[10px] opacity-60 font-normal">Soon</span>
+                  <span className="text-[9px] opacity-50 font-normal">Soon</span>
                 )}
               </button>
             );

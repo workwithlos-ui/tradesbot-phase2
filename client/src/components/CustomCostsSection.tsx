@@ -18,14 +18,12 @@ interface CustomCostsSectionProps {
 }
 
 export default function CustomCostsSection(props: CustomCostsSectionProps) {
-  const customItemsTotal = props.additionalCosts.reduce((sum, item) => sum + item.amount, 0);
-  const deliveryTotal = props.deliveryEnabled ? props.deliveryCost : 0;
   const itemCount = props.additionalCosts.length + (props.deliveryEnabled ? 1 : 0);
 
   const rightContent = (
     <div className="text-right">
-      <div className="text-sm font-bold font-num text-primary">{formatCurrency(props.totalCustomCosts)}</div>
-      <div className="text-xs text-muted-foreground">
+      <div className="text-sm font-bold font-num" style={{ color: "var(--primary)" }}>{formatCurrency(props.totalCustomCosts)}</div>
+      <div className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>
         Tarp + {itemCount} item{itemCount !== 1 ? "s" : ""}
       </div>
     </div>
@@ -35,53 +33,51 @@ export default function CustomCostsSection(props: CustomCostsSectionProps) {
     <SectionAccordion
       icon={<DollarSign className="w-4 h-4" />}
       title="Additional Costs"
-      subtitle="Tarp charge, delivery, and custom items"
+      subtitle="Tarp, delivery, and custom items"
       rightContent={rightContent}
       defaultOpen={false}
     >
       <div className="space-y-4">
         {/* Fixed: Tarp System Charge */}
-        <div className="flex items-center justify-between p-3.5 bg-amber-50 border border-amber-200/80 rounded-xl">
+        <div className="surface-warn rounded-lg p-3.5 flex items-center justify-between">
           <div>
-            <div className="text-sm font-semibold">Tarp System Charge</div>
-            <div className="text-xs text-muted-foreground mt-0.5">Fixed $50 per job — every estimate</div>
+            <div className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>Tarp System Charge</div>
+            <div className="text-[11px] mt-0.5" style={{ color: "var(--muted-foreground)" }}>Fixed $50 per job</div>
           </div>
-          <span className="text-sm font-bold font-num">{formatCurrency(TARP_SYSTEM_CHARGE)}</span>
+          <span className="text-sm font-bold font-num" style={{ color: "#FBBF24" }}>{formatCurrency(TARP_SYSTEM_CHARGE)}</span>
         </div>
 
         {/* Delivery Toggle */}
-        <div className="border border-border/60 rounded-xl p-3.5">
+        <div className="rounded-lg p-3.5" style={{ background: "var(--background)", border: "1px solid var(--border)" }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => props.onDeliveryChange(!props.deliveryEnabled)}
-                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors shrink-0 ${
-                  props.deliveryEnabled ? "bg-primary" : "bg-muted"
-                }`}
+                className="toggle-track shrink-0"
+                style={{ background: props.deliveryEnabled ? "var(--primary)" : "var(--muted)" }}
               >
                 <span
-                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
-                    props.deliveryEnabled ? "translate-x-6" : "translate-x-1"
-                  }`}
+                  className="toggle-thumb"
+                  style={{ transform: props.deliveryEnabled ? "translateX(22px)" : "translateX(4px)" }}
                 />
               </button>
               <div className="flex items-center gap-2">
-                <Truck className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Material Delivery</span>
+                <Truck className="w-4 h-4" style={{ color: "var(--muted-foreground)" }} />
+                <span className="text-sm font-medium" style={{ color: "var(--foreground)" }}>Material Delivery</span>
               </div>
             </div>
             {props.deliveryEnabled && (
               <div className="flex items-center gap-1.5">
-                <span className="text-xs text-muted-foreground">$</span>
+                <span className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>$</span>
                 <input
                   type="number"
                   min="0"
                   step="1"
                   value={props.deliveryCost}
                   onChange={(e) => props.onDeliveryCostChange(parseFloat(e.target.value) || 0)}
-                  className="w-24 px-3 py-2 text-sm text-right border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring/30 font-num"
-                  style={{ minHeight: "40px" }}
+                  className="num-input"
+                  style={{ width: "96px" }}
                 />
               </div>
             )}
@@ -92,13 +88,14 @@ export default function CustomCostsSection(props: CustomCostsSectionProps) {
         <div>
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Custom Items</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Cupola, framing, vents, etc.</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--muted-foreground)" }}>Custom Items</p>
+              <p className="text-[11px] mt-0.5" style={{ color: "var(--muted-foreground)" }}>Cupola, framing, vents, etc.</p>
             </div>
             <button
               type="button"
               onClick={props.onAddAdditionalCost}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-primary border border-primary/30 rounded-lg hover:bg-primary/5 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium rounded-lg transition-all"
+              style={{ color: "var(--primary)", border: "1px solid rgba(0,212,170,0.25)", background: "rgba(0,212,170,0.05)" }}
             >
               <Plus className="w-3.5 h-3.5" />
               Add Item
@@ -106,43 +103,42 @@ export default function CustomCostsSection(props: CustomCostsSectionProps) {
           </div>
 
           {props.additionalCosts.length === 0 ? (
-            <div className="text-center py-6 border border-dashed border-border/60 rounded-xl">
-              <p className="text-xs text-muted-foreground">No custom items yet</p>
+            <div className="text-center py-6 rounded-lg" style={{ border: "1px dashed var(--border)" }}>
+              <p className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>No custom items yet</p>
             </div>
           ) : (
             <div className="space-y-2">
               {props.additionalCosts.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center gap-2 p-3 border border-border/60 rounded-xl bg-background"
+                  className="flex items-center gap-2 p-3 rounded-lg"
+                  style={{ background: "var(--background)", border: "1px solid var(--border)" }}
                 >
                   <input
                     type="text"
                     placeholder="e.g. Custom cupola repair"
                     value={item.description}
                     onChange={(e) => props.onUpdateAdditionalCost(item.id, "description", e.target.value)}
-                    className="flex-1 px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary/50 transition-colors"
-                    style={{ minHeight: "40px" }}
+                    className="field-input flex-1"
                   />
                   <div className="flex items-center gap-1 shrink-0">
-                    <span className="text-xs text-muted-foreground">$</span>
+                    <span className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>$</span>
                     <input
                       type="number"
                       min="0"
                       step="1"
                       placeholder="0"
                       value={item.amount || ""}
-                      onChange={(e) =>
-                        props.onUpdateAdditionalCost(item.id, "amount", parseFloat(e.target.value) || 0)
-                      }
-                      className="w-24 px-3 py-2 text-sm text-right border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring/30 font-num transition-colors"
-                      style={{ minHeight: "40px" }}
+                      onChange={(e) => props.onUpdateAdditionalCost(item.id, "amount", parseFloat(e.target.value) || 0)}
+                      className="num-input"
+                      style={{ width: "96px" }}
                     />
                   </div>
                   <button
                     type="button"
                     onClick={() => props.onRemoveAdditionalCost(item.id)}
-                    className="p-2 text-muted-foreground hover:text-destructive transition-colors rounded-lg"
+                    className="p-2 rounded-lg transition-colors"
+                    style={{ color: "var(--muted-foreground)" }}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -153,9 +149,9 @@ export default function CustomCostsSection(props: CustomCostsSectionProps) {
         </div>
 
         {/* Section Total */}
-        <div className="pt-3 border-t border-border flex items-center justify-between">
-          <span className="text-sm font-semibold">Additional Costs Total</span>
-          <span className="text-lg font-bold font-num text-primary">{formatCurrency(props.totalCustomCosts)}</span>
+        <div className="pt-3 flex items-center justify-between" style={{ borderTop: "1px solid var(--border)" }}>
+          <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>Additional Costs Total</span>
+          <span className="text-lg font-bold font-num" style={{ color: "var(--primary)" }}>{formatCurrency(props.totalCustomCosts)}</span>
         </div>
       </div>
     </SectionAccordion>

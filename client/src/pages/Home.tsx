@@ -49,20 +49,20 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--background)" }}>
       <AppHeader />
       <TradeSelector
         selectedTrade={estimator.state.selectedTrade}
         onTradeChange={estimator.setTrade}
       />
 
-      {/* Nav bar with estimates link */}
-      <div className="border-b border-border/60 bg-card/50">
-        <div className="container flex items-center justify-between py-2">
-          <div />
+      {/* Saved estimates link */}
+      <div style={{ borderBottom: "1px solid var(--border)" }}>
+        <div className="container flex items-center justify-end py-2">
           <Link
             href="/estimates"
-            className="flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 font-medium transition-colors"
+            className="flex items-center gap-1.5 text-sm font-medium transition-colors"
+            style={{ color: "var(--primary)" }}
           >
             <ClipboardList className="w-4 h-4" />
             Saved Estimates
@@ -71,10 +71,10 @@ export default function Home() {
       </div>
 
       {isShingleRoofing ? (
-        <main className="flex-1 container py-6 pb-24 lg:pb-6">
+        <main className="flex-1 container py-6 pb-28 lg:pb-6">
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Left column: Form sections */}
-            <div className="flex-1 space-y-4 min-w-0">
+            <div className="flex-1 space-y-3 min-w-0">
               <JobInfoSection
                 customerName={estimator.state.customerName}
                 customerPhone={estimator.state.customerPhone}
@@ -126,8 +126,8 @@ export default function Home() {
               />
             </div>
 
-            {/* Right column: Estimate Summary + Margin Calculator (sticky) */}
-            <div className="w-full lg:w-80 shrink-0">
+            {/* Right column: Summary (desktop only) */}
+            <div className="hidden lg:block w-80 shrink-0">
               <div className="sticky top-6">
                 <EstimateSummary
                   state={estimator.state}

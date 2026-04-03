@@ -2,7 +2,7 @@ import { useState } from "react";
 import { LABOR_ITEMS, SHINGLE_TYPES, STEEP_PITCH_TIERS, MARKET_CONFIGS } from "@/lib/data";
 import type { EstimatorState } from "@/hooks/useEstimator";
 import { formatCurrency } from "@/lib/utils";
-import { ClipboardCheck, Copy, Printer, CheckCircle, X } from "lucide-react";
+import { Copy, Printer, CheckCircle, X } from "lucide-react";
 
 interface WorkOrderModalProps {
   isOpen: boolean;
@@ -25,7 +25,6 @@ export default function WorkOrderModal({ isOpen, onClose, state, shingleSquares,
   const baseRate = state.laborCosts["base-labor"] || 80;
   const baseLaborCost = laborSquares * baseRate;
 
-  // Active labor items (non-base with qty > 0)
   const activeLaborItems = LABOR_ITEMS
     .filter((item) => !item.isBaseLabor && (state.laborQtys[item.id] || 0) > 0)
     .map((item) => ({
@@ -37,75 +36,58 @@ export default function WorkOrderModal({ isOpen, onClose, state, shingleSquares,
       description: item.description,
     }));
 
-  // Active steep pitch tiers
   const activePitchTiers = STEEP_PITCH_TIERS.filter((t) => (state.steepPitchSquares[t.id] || 0) > 0);
   const steepPitchAdder = activePitchTiers.reduce((sum, t) => sum + (state.steepPitchSquares[t.id] || 0) * t.adderPerSquare, 0);
 
-  // Special conditions
   const specialConditions: string[] = [];
   if ((state.laborQtys["hand-load"] || 0) > 0) specialConditions.push("Hand load required");
   if ((state.laborQtys["two-story-charge"] || 0) > 0) specialConditions.push("Two-story home");
   if ((state.laborQtys["shake-tear-off"] || 0) > 0) specialConditions.push("Shake/wood shingle tear off");
-  if ((state.laborQtys["access-charge"] || 0) > 0) specialConditions.push("Special access required — dump trailer/drag trash");
+  if ((state.laborQtys["access-charge"] || 0) > 0) specialConditions.push("Special access — dump trailer/drag trash");
   if (activePitchTiers.length > 0) specialConditions.push(`Steep pitch: ${activePitchTiers.map((t) => t.label).join(", ")}`);
 
   const generateWorkOrderText = () => {
     const lines = [
-      "═══════════════════════════════════════════════════════",
-      "                    WORK ORDER",
-      "═══════════════════════════════════════════════════════",
+      "WORK ORDER",
+      "=".repeat(60),
       `Date: ${today}`,
-      `Customer: ${state.customerName || "(No customer name)"}`,
-      `Job Address: ${state.address || "(No address)"}`,
-      `Job Name: ${state.jobName || "(No job name)"}`,
+      `Customer: ${state.customerName || "N/A"}`,
+      `Job: ${state.jobName || "N/A"}`,
+      `Address: ${state.address || "N/A"}`,
       `Market: ${market?.name || "St. Louis, MO"}`,
-      "",
-      "JOB SPECIFICATIONS:",
-      `  Shingle Type: ${shingle?.name || "N/A"}`,
-      `  Shingle Squares: ${shingleSquares.toFixed(1)} sq`,
-      `  Labor Squares: ${laborSquares.toFixed(1)} sq`,
+      `Shingle: ${shingle?.name || "N/A"}`,
+      `Squares: ${shingleSquares.toFixed(1)} shingle / ${laborSquares.toFixed(1)} labor`,
       "",
     ];
-
     if (specialConditions.length > 0) {
       lines.push("SPECIAL CONDITIONS:");
-      specialConditions.forEach((c) => lines.push(`  ⚠ ${c}`));
+      specialConditions.forEach((c) => lines.push(`  * ${c}`));
       lines.push("");
     }
-
     lines.push("LABOR SCOPE:");
-    lines.push("─".repeat(60));
-    lines.push(`  Base Labor: ${laborSquares.toFixed(1)} sq × $${baseRate}/sq = ${formatCurrency(baseLaborCost)}`);
-    lines.push("  Includes: tear off, install shingles, underlayment, ice/water shield,");
-    lines.push("            drip edges, valley metal, pipe jacks, haul off and clean up");
-
+    lines.push("-".repeat(60));
+    lines.push(`  Base Labor: ${laborSquares.toFixed(1)} sq x $${baseRate}/sq = ${formatCurrency(baseLaborCost)}`);
+    lines.push("  Includes: tear off, install, underlayment, ice/water, drip edges,");
+    lines.push("            valley metal, pipe jacks, haul off, clean up");
     if (activePitchTiers.length > 0) {
       lines.push("");
-      lines.push("  Steep Pitch Adder:");
+      lines.push("  Steep Pitch:");
       activePitchTiers.forEach((tier) => {
         const sq = state.steepPitchSquares[tier.id] || 0;
-        lines.push(`    ${tier.label}: ${sq} sq × $${tier.adderPerSquare}/sq = ${formatCurrency(sq * tier.adderPerSquare)}`);
+        lines.push(`    ${tier.label}: ${sq} sq x $${tier.adderPerSquare}/sq = ${formatCurrency(sq * tier.adderPerSquare)}`);
       });
-      lines.push(`  Steep Pitch Total: ${formatCurrency(steepPitchAdder)}`);
     }
-
     if (activeLaborItems.length > 0) {
       lines.push("");
-      lines.push("  Additional Labor Items:");
+      lines.push("  Additional:");
       activeLaborItems.forEach((item) => {
-        lines.push(`    ${item.name}: ${item.qty} ${item.unit} × $${item.costPerUnit} = ${formatCurrency(item.total)}`);
-        if (item.description) lines.push(`      (${item.description})`);
+        lines.push(`    ${item.name}: ${item.qty} ${item.unit} x $${item.costPerUnit} = ${formatCurrency(item.total)}`);
       });
     }
-
-    lines.push("");
-    lines.push("─".repeat(60));
+    lines.push("-".repeat(60));
     lines.push(`  TOTAL LABOR: ${formatCurrency(laborTotal)}`);
-    lines.push("═══════════════════════════════════════════════════════");
-    lines.push("PAYMENT TERMS:");
-    lines.push("  Payment due upon completion and inspection.");
-    lines.push("═══════════════════════════════════════════════════════");
-
+    lines.push("");
+    lines.push("Payment due upon completion and inspection.");
     return lines.join("\n");
   };
 
@@ -117,78 +99,54 @@ export default function WorkOrderModal({ isOpen, onClose, state, shingleSquares,
   };
 
   const handlePrint = () => {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Work Order — ${state.jobName || state.customerName || "TradesBot"}</title>
-          <style>
-            body { font-family: monospace; font-size: 12px; padding: 20px; }
-            pre { white-space: pre-wrap; }
-          </style>
-        </head>
-        <body>
-          <pre>${generateWorkOrderText()}</pre>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.print();
+    const w = window.open("", "_blank");
+    if (!w) return;
+    w.document.write(`<html><head><title>Work Order</title><style>body{font-family:monospace;font-size:12px;padding:20px;background:#fff;color:#000}pre{white-space:pre-wrap}</style></head><body><pre>${generateWorkOrderText()}</pre></body></html>`);
+    w.document.close();
+    w.print();
   };
 
   return (
     <>
-      {/* Backdrop */}
+      <div className="sheet-overlay animate-fade-in" onClick={onClose} />
       <div
-        className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm animate-fade-in"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 bg-card rounded-2xl shadow-2xl max-h-[85vh] overflow-y-auto sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-2xl">
+        className="fixed inset-4 lg:inset-y-8 lg:inset-x-auto lg:left-1/2 lg:-translate-x-1/2 lg:w-full lg:max-w-2xl z-50 flex flex-col rounded-xl overflow-hidden animate-fade-in"
+        style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 25px 60px rgba(0,0,0,0.5)" }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border/60 sticky top-0 bg-card">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center text-primary">
-              <ClipboardCheck className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold">Work Order</h2>
-              <p className="text-xs text-muted-foreground">{state.jobName || state.customerName || "New Job"}</p>
-            </div>
+        <div className="flex items-center justify-between px-5 py-4 shrink-0" style={{ borderBottom: "1px solid var(--border)" }}>
+          <div>
+            <h2 className="text-base font-bold" style={{ color: "var(--foreground)" }}>Work Order</h2>
+            <p className="text-[11px] mt-0.5" style={{ color: "var(--muted-foreground)" }}>{state.jobName || state.customerName || "New Job"}</p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2 rounded-lg hover:bg-secondary transition-colors"
-          >
-            <X className="w-4 h-4 text-muted-foreground" />
+          <button onClick={onClose} className="p-2 rounded-lg transition-colors" style={{ color: "var(--muted-foreground)" }}>
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="px-5 py-4 space-y-4">
-          {/* Job Header */}
-          <div className="bg-secondary/50 rounded-xl p-4 text-sm">
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-              <div><span className="font-medium text-muted-foreground">Date:</span> {today}</div>
-              <div><span className="font-medium text-muted-foreground">Market:</span> {market?.name || "St. Louis, MO"}</div>
-              <div><span className="font-medium text-muted-foreground">Customer:</span> {state.customerName || "—"}</div>
-              <div><span className="font-medium text-muted-foreground">Phone:</span> {state.customerPhone || "—"}</div>
-              <div className="col-span-2"><span className="font-medium text-muted-foreground">Address:</span> {state.address || "—"}</div>
-              <div><span className="font-medium text-muted-foreground">Shingle:</span> {shingle?.name || "—"}</div>
-              <div><span className="font-medium text-muted-foreground">Squares:</span> <span className="font-num">{shingleSquares.toFixed(1)} sq (labor: {laborSquares.toFixed(1)} sq)</span></div>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+          {/* Job info */}
+          <div className="rounded-lg p-3" style={{ background: "var(--secondary)" }}>
+            <div className="grid grid-cols-2 gap-2 text-[11px]">
+              <div><span style={{ color: "var(--muted-foreground)" }}>Date:</span> <span style={{ color: "var(--foreground)" }}>{today}</span></div>
+              <div><span style={{ color: "var(--muted-foreground)" }}>Market:</span> <span style={{ color: "var(--foreground)" }}>{market?.name || "St. Louis"}</span></div>
+              <div><span style={{ color: "var(--muted-foreground)" }}>Customer:</span> <span style={{ color: "var(--foreground)" }}>{state.customerName || "—"}</span></div>
+              <div><span style={{ color: "var(--muted-foreground)" }}>Phone:</span> <span style={{ color: "var(--foreground)" }}>{state.customerPhone || "—"}</span></div>
+              <div className="col-span-2"><span style={{ color: "var(--muted-foreground)" }}>Address:</span> <span style={{ color: "var(--foreground)" }}>{state.address || "—"}</span></div>
+              <div><span style={{ color: "var(--muted-foreground)" }}>Shingle:</span> <span style={{ color: "var(--foreground)" }}>{shingle?.name || "—"}</span></div>
+              <div><span style={{ color: "var(--muted-foreground)" }}>Squares:</span> <span className="font-num" style={{ color: "var(--foreground)" }}>{shingleSquares.toFixed(1)} / {laborSquares.toFixed(1)} labor</span></div>
             </div>
           </div>
 
           {/* Special Conditions */}
           {specialConditions.length > 0 && (
-            <div className="bg-amber-50 border border-amber-200/80 rounded-xl p-3.5">
-              <p className="text-xs font-bold text-amber-800 mb-2 uppercase tracking-wider">⚠ Special Conditions</p>
+            <div className="surface-warn rounded-lg p-3.5">
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "#FBBF24" }}>Special Conditions</p>
               <ul className="space-y-1">
                 {specialConditions.map((c, i) => (
-                  <li key={i} className="text-sm text-amber-800 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-amber-500 rounded-full shrink-0" />
+                  <li key={i} className="text-[12px] flex items-center gap-2" style={{ color: "#FBBF24" }}>
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "#FBBF24" }} />
                     {c}
                   </li>
                 ))}
@@ -197,38 +155,36 @@ export default function WorkOrderModal({ isOpen, onClose, state, shingleSquares,
           )}
 
           {/* Labor Scope */}
-          <div className="border border-border/60 rounded-xl overflow-hidden">
-            <div className="bg-secondary/50 px-4 py-2.5 border-b border-border/60">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Labor Scope</span>
+          <div className="rounded-lg overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+            <div className="px-4 py-2.5" style={{ background: "var(--secondary)", borderBottom: "1px solid var(--border)" }}>
+              <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--muted-foreground)" }}>Labor Scope</span>
             </div>
 
-            {/* Base Labor */}
-            <div className="p-4 border-b border-border/40">
+            <div className="p-4" style={{ borderBottom: "1px solid var(--border)" }}>
               <div className="flex items-center justify-between mb-1.5">
                 <div>
-                  <span className="text-sm font-semibold">Base Labor</span>
-                  <span className="text-xs text-muted-foreground ml-2">
+                  <span className="text-[13px] font-semibold" style={{ color: "var(--foreground)" }}>Base Labor</span>
+                  <span className="text-[11px] ml-2" style={{ color: "var(--muted-foreground)" }}>
                     {laborSquares.toFixed(1)} sq × ${baseRate}/sq
                   </span>
                 </div>
-                <span className="text-sm font-bold font-num">{formatCurrency(baseLaborCost)}</span>
+                <span className="text-[13px] font-bold font-num" style={{ color: "var(--foreground)" }}>{formatCurrency(baseLaborCost)}</span>
               </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Includes: tear off, install shingles, underlayment, ice/water shield, drip edges, valley metal, pipe jacks, haul off and clean up
+              <p className="text-[10px] leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
+                Tear off, install shingles, underlayment, ice/water shield, drip edges, valley metal, pipe jacks, haul off, clean up
               </p>
             </div>
 
-            {/* Steep Pitch */}
             {steepPitchAdder > 0 && (
-              <div className="p-4 border-b border-border/40 bg-amber-50/50">
+              <div className="p-4" style={{ borderBottom: "1px solid var(--border)", background: "rgba(251,191,36,0.04)" }}>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-sm font-semibold">Steep Pitch Adder</span>
-                  <span className="text-sm font-bold font-num">{formatCurrency(steepPitchAdder)}</span>
+                  <span className="text-[13px] font-semibold" style={{ color: "var(--foreground)" }}>Steep Pitch</span>
+                  <span className="text-[13px] font-bold font-num" style={{ color: "#FBBF24" }}>{formatCurrency(steepPitchAdder)}</span>
                 </div>
                 {activePitchTiers.map((tier) => {
                   const sq = state.steepPitchSquares[tier.id] || 0;
                   return (
-                    <div key={tier.id} className="text-xs text-muted-foreground">
+                    <div key={tier.id} className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>
                       {tier.label}: {sq} sq × ${tier.adderPerSquare}/sq = {formatCurrency(sq * tier.adderPerSquare)}
                     </div>
                   );
@@ -236,49 +192,47 @@ export default function WorkOrderModal({ isOpen, onClose, state, shingleSquares,
               </div>
             )}
 
-            {/* Additional Labor Items */}
             {activeLaborItems.map((item) => (
-              <div key={item.name} className="p-4 border-b border-border/40 last:border-b-0">
+              <div key={item.name} className="p-4" style={{ borderBottom: "1px solid var(--border)" }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-sm font-medium">{item.name}</span>
-                    <span className="text-xs text-muted-foreground ml-2">
+                    <span className="text-[13px] font-medium" style={{ color: "var(--foreground)" }}>{item.name}</span>
+                    <span className="text-[11px] ml-2" style={{ color: "var(--muted-foreground)" }}>
                       {item.qty} {item.unit} × ${item.costPerUnit}
                     </span>
                   </div>
-                  <span className="text-sm font-bold font-num">{formatCurrency(item.total)}</span>
+                  <span className="text-[13px] font-bold font-num" style={{ color: "var(--foreground)" }}>{formatCurrency(item.total)}</span>
                 </div>
               </div>
             ))}
 
-            {/* Total */}
-            <div className="p-4 bg-primary/5 border-t border-primary/20">
+            <div className="p-4" style={{ background: "rgba(0,212,170,0.06)" }}>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold">Total Labor</span>
-                <span className="text-lg font-bold font-num text-primary">{formatCurrency(laborTotal)}</span>
+                <span className="text-sm font-bold" style={{ color: "var(--foreground)" }}>Total Labor</span>
+                <span className="text-lg font-bold font-num" style={{ color: "var(--primary)" }}>{formatCurrency(laborTotal)}</span>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-3 pb-2">
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="flex items-center justify-center gap-2 px-4 py-3 border border-border rounded-xl text-sm font-medium hover:bg-secondary transition-colors"
-            >
-              {copied ? <CheckCircle className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-              {copied ? "Copied!" : "Copy Text"}
-            </button>
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="flex items-center justify-center gap-2 px-4 py-3 border border-border rounded-xl text-sm font-medium hover:bg-secondary transition-colors"
-            >
-              <Printer className="w-4 h-4" />
-              Print Order
-            </button>
-          </div>
+        {/* Footer */}
+        <div className="flex items-center gap-2 px-5 py-4 shrink-0" style={{ borderTop: "1px solid var(--border)" }}>
+          <button
+            onClick={handleCopy}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold transition-all active:scale-[0.98]"
+            style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
+          >
+            {copied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            {copied ? "Copied!" : "Copy Order"}
+          </button>
+          <button
+            onClick={handlePrint}
+            className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all"
+            style={{ border: "1px solid var(--border)", color: "var(--foreground)" }}
+          >
+            <Printer className="w-4 h-4" />
+            Print
+          </button>
         </div>
       </div>
     </>
