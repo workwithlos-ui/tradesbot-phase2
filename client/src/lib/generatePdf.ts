@@ -1,39 +1,37 @@
 import { jsPDF } from "jspdf";
 import type { EstimatorState } from "@/hooks/useEstimator";
+import type { MaterialCostLine, LaborCostLine } from "@/lib/data";
 import {
-  MATERIAL_ITEMS,
-  LABOR_ITEMS,
   SUPPLIERS,
   SHINGLE_TYPES,
-  STEEP_PITCH_TIERS,
-  BASE_LABOR_RATE,
-  TARP_SYSTEM_CHARGE,
   MARKET_CONFIGS,
+  TARP_SYSTEM_CHARGE,
 } from "@/lib/data";
 
 interface PdfData {
   state: EstimatorState;
-  shingleSquares: number;
-  laborSquares: number;
+  materialCostLines: MaterialCostLine[];
+  laborCostLines: LaborCostLine[];
+  totalSquares: number;
   totalMaterialCost: number;
-  baseLaborCost: number;
-  additionalLaborCost: number;
-  steepPitchAdder: number;
   totalLaborCost: number;
   tarpCharge: number;
-  deliveryCostTotal: number;
-  additionalCostsTotal: number;
   totalCustomCosts: number;
   estimateTotal: number;
   requiredCustomerPrice: number;
   targetMarginPct: number;
 }
 
+function fmt(n: number): string {
+  return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 export function generateEstimatePdf(data: PdfData): void {
   const {
     state,
-    shingleSquares,
-    laborSquares,
+    materialCostLines,
+    laborCostLines,
+    totalSquares,
     totalMaterialCost,
     totalLaborCost,
     tarpCharge,
@@ -41,7 +39,6 @@ export function generateEstimatePdf(data: PdfData): void {
     estimateTotal,
     requiredCustomerPrice,
     targetMarginPct,
-    steepPitchAdder,
   } = data;
 
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
@@ -51,35 +48,44 @@ export function generateEstimatePdf(data: PdfData): void {
   const contentWidth = pageWidth - margin * 2;
   let y = margin;
 
-  const primaryColor: [number, number, number] = [37, 99, 235];
-  const darkColor: [number, number, number] = [30, 41, 59];
-  const grayColor: [number, number, number] = [100, 116, 139];
-  const lightBg: [number, number, number] = [241, 245, 249];
-  const greenColor: [number, number, number] = [22, 163, 74];
+  const primaryColor: [number, number, number] = [0, 212, 170];
+  const darkColor: [number, number, number] = [240, 234, 214];
+  const grayColor: [number, number, number] = [120, 113, 108];
+  const bgColor: [number, number, number] = [13, 13, 13];
+  const cardColor: [number, number, number] = [26, 26, 26];
+  const greenColor: [number, number, number] = [34, 197, 94];
+
+  // Dark background
+  doc.setFillColor(...bgColor);
+  doc.rect(0, 0, pageWidth, pageHeight, "F");
 
   function checkPageBreak(needed: number) {
     if (y + needed > pageHeight - 25) {
       doc.addPage();
+      doc.setFillColor(...bgColor);
+      doc.rect(0, 0, pageWidth, pageHeight, "F");
       y = margin;
     }
   }
 
   function drawLine(yPos: number) {
-    doc.setDrawColor(203, 213, 225);
+    doc.setDrawColor(42, 42, 42);
     doc.setLineWidth(0.3);
     doc.line(margin, yPos, pageWidth - margin, yPos);
   }
 
   // Header
-  doc.setFillColor(...primaryColor);
+  doc.setFillColor(26, 26, 26);
   doc.rect(0, 0, pageWidth, 32, "F");
-  doc.setTextColor(255, 255, 255);
+  doc.setTextColor(...primaryColor);
   doc.setFontSize(20);
   doc.setFont("helvetica", "bold");
   doc.text("TradesBot", margin, 14);
+  doc.setTextColor(...grayColor);
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.text("Roofing Material and Labor Estimate", margin, 20);
+  doc.setTextColor(...darkColor);
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
   doc.text("Trusted Roofing LLC", pageWidth - margin, 12, { align: "right" });
@@ -87,6 +93,7 @@ export function generateEstimatePdf(data: PdfData): void {
   doc.setFontSize(8);
   const supplierName = SUPPLIERS.find((s) => s.id === state.supplier)?.name || state.supplier;
   const marketName = MARKET_CONFIGS.find((m) => m.id === state.market)?.name || "St. Louis, MO";
+  doc.setTextColor(...grayColor);
   doc.text("Supplier: " + supplierName, pageWidth - margin, 18, { align: "right" });
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   doc.text("Date: " + today, pageWidth - margin, 24, { align: "right" });
@@ -94,13 +101,14 @@ export function generateEstimatePdf(data: PdfData): void {
   y = 40;
 
   // Date bar
-  doc.setFillColor(...lightBg);
+  doc.setFillColor(...cardColor);
   doc.rect(margin, y, contentWidth, 8, "F");
   doc.setTextColor(...darkColor);
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
   doc.text("ESTIMATE", margin + 3, y + 5.5);
   doc.setFont("helvetica", "normal");
+  doc.setTextColor(...grayColor);
   doc.text(today, pageWidth - margin - 3, y + 5.5, { align: "right" });
   y += 14;
 
@@ -129,13 +137,14 @@ export function generateEstimatePdf(data: PdfData): void {
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...darkColor);
   const shingleName = SHINGLE_TYPES.find((s) => s.id === state.shingleType)?.name || state.shingleType;
+  const m = state.measurements;
   const jobLines = [
     "Job: " + (state.jobName || "-"),
     "Shingle: " + shingleName,
     "Market: " + marketName,
-    "Shingle Squares: " + shingleSquares.toFixed(1) + " sq",
-    "Labor Squares: " + laborSquares.toFixed(1) + " sq",
-    "Waste Factor: " + (state.wasteFactor || 8) + "%",
+    "Roof Squares: " + totalSquares,
+    "Pitch: " + m.pitch + "/12",
+    "Waste Factor: " + state.wasteFactor + "%",
   ];
   jobLines.forEach((line) => { doc.text(line, margin + colWidth + 6, rightY); rightY += 4.5; });
 
@@ -152,16 +161,15 @@ export function generateEstimatePdf(data: PdfData): void {
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...grayColor);
   doc.setFontSize(8);
-  doc.text("Total: $" + totalMaterialCost.toFixed(2), pageWidth - margin, y, { align: "right" });
+  doc.text("Total: " + fmt(totalMaterialCost), pageWidth - margin, y, { align: "right" });
   y += 6;
 
-  doc.setFillColor(...lightBg);
+  doc.setFillColor(...cardColor);
   doc.rect(margin, y - 3.5, contentWidth, 6, "F");
   doc.setFontSize(7.5);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...grayColor);
-  doc.text("#", margin + 2, y);
-  doc.text("ITEM", margin + 10, y);
+  doc.text("ITEM", margin + 2, y);
   doc.text("UNIT", margin + 85, y);
   doc.text("QTY", margin + 105, y);
   doc.text("PRICE", margin + 120, y);
@@ -170,33 +178,29 @@ export function generateEstimatePdf(data: PdfData): void {
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  const activeMaterials = MATERIAL_ITEMS.filter((item) => (state.materialQtys[item.id] || 0) > 0);
-  activeMaterials.forEach((item, idx) => {
+  const activeMaterials = materialCostLines.filter(l => l.qty > 0);
+  activeMaterials.forEach((line, idx) => {
     checkPageBreak(6);
-    const qty = state.materialQtys[item.id] || 0;
-    const lineTotal = qty * item.unitPrice;
     if (idx % 2 === 0) {
-      doc.setFillColor(248, 250, 252);
+      doc.setFillColor(20, 20, 20);
       doc.rect(margin, y - 3.5, contentWidth, 5, "F");
     }
-    doc.setTextColor(...grayColor);
-    doc.text(String(item.lineNumber), margin + 2, y);
     doc.setTextColor(...darkColor);
-    doc.text(item.name, margin + 10, y);
+    doc.text(line.name.slice(0, 40), margin + 2, y);
     doc.setTextColor(...grayColor);
-    doc.text(item.unit, margin + 85, y);
-    doc.text(String(qty), margin + 105, y);
-    doc.text("$" + item.unitPrice.toFixed(2), margin + 120, y);
+    doc.text(line.unit, margin + 85, y);
+    doc.text(String(line.qty), margin + 105, y);
+    doc.text(fmt(line.unitPrice), margin + 120, y);
     doc.setTextColor(...darkColor);
     doc.setFont("helvetica", "bold");
-    doc.text("$" + lineTotal.toFixed(2), pageWidth - margin - 3, y, { align: "right" });
+    doc.text(fmt(line.total), pageWidth - margin - 3, y, { align: "right" });
     doc.setFont("helvetica", "normal");
     y += 5;
   });
 
   if (activeMaterials.length === 0) {
     doc.setTextColor(...grayColor);
-    doc.text("No materials entered", margin + 10, y);
+    doc.text("No materials calculated", margin + 2, y);
     y += 5;
   }
 
@@ -213,51 +217,28 @@ export function generateEstimatePdf(data: PdfData): void {
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...grayColor);
   doc.setFontSize(8);
-  doc.text("Total: $" + totalLaborCost.toFixed(2), pageWidth - margin, y, { align: "right" });
+  doc.text("Total: " + fmt(totalLaborCost), pageWidth - margin, y, { align: "right" });
   y += 6;
 
-  // Base labor
-  checkPageBreak(10);
-  doc.setFillColor(...lightBg);
-  doc.rect(margin, y - 3.5, contentWidth, 6, "F");
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...darkColor);
-  const baseCost = state.laborCosts["base-labor"] || BASE_LABOR_RATE;
-  const baseTotal = laborSquares * baseCost;
-  doc.text("Base Labor (" + laborSquares.toFixed(1) + " sq x $" + baseCost.toFixed(0) + "/sq)", margin + 2, y);
-  doc.text("$" + baseTotal.toFixed(2), pageWidth - margin - 3, y, { align: "right" });
-  y += 6;
-
-  // Steep pitch
-  for (const tier of STEEP_PITCH_TIERS) {
-    const sq = state.steepPitchSquares[tier.id] || 0;
-    if (sq > 0) {
-      checkPageBreak(6);
-      const tierTotal = sq * tier.adderPerSquare;
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(...darkColor);
-      doc.text("  " + tier.label + " (" + sq + " sq x $" + tier.adderPerSquare + "/sq)", margin + 2, y);
-      doc.setFont("helvetica", "bold");
-      doc.text("$" + tierTotal.toFixed(2), pageWidth - margin - 3, y, { align: "right" });
-      y += 5;
-    }
-  }
-
-  // Additional labor items
-  doc.setFont("helvetica", "normal");
-  const nonBaseItems = LABOR_ITEMS.filter((item) => !item.isBaseLabor);
-  for (const item of nonBaseItems) {
-    const qty = state.laborQtys[item.id] || 0;
-    if (qty <= 0) continue;
+  const activeLabor = laborCostLines.filter(l => l.qty > 0);
+  activeLabor.forEach((line, idx) => {
     checkPageBreak(6);
-    const cost = state.laborCosts[item.id] || item.defaultCostPerUnit;
-    const lineTotal = qty * cost;
+    if (idx === 0) {
+      doc.setFillColor(...cardColor);
+      doc.rect(margin, y - 3.5, contentWidth, 6, "F");
+    }
     doc.setTextColor(...darkColor);
-    doc.text(item.name + " (" + qty + " x $" + cost.toFixed(0) + ")", margin + 2, y);
-    doc.setFont("helvetica", "bold");
-    doc.text("$" + lineTotal.toFixed(2), pageWidth - margin - 3, y, { align: "right" });
     doc.setFont("helvetica", "normal");
+    const desc = line.name + " (" + line.qty + " " + line.unit + " x $" + line.rate + ")";
+    doc.text(desc.slice(0, 55), margin + 2, y);
+    doc.setFont("helvetica", "bold");
+    doc.text(fmt(line.total), pageWidth - margin - 3, y, { align: "right" });
+    y += 5;
+  });
+
+  if (activeLabor.length === 0) {
+    doc.setTextColor(...grayColor);
+    doc.text("No labor calculated", margin + 2, y);
     y += 5;
   }
 
@@ -274,15 +255,15 @@ export function generateEstimatePdf(data: PdfData): void {
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...grayColor);
   doc.setFontSize(8);
-  doc.text("Total: $" + totalCustomCosts.toFixed(2), pageWidth - margin, y, { align: "right" });
+  doc.text("Total: " + fmt(totalCustomCosts), pageWidth - margin, y, { align: "right" });
   y += 6;
 
-  // Tarp system charge (always)
+  // Tarp system charge
   checkPageBreak(6);
   doc.setTextColor(...darkColor);
   doc.text("Tarp System Charge (fixed per job)", margin + 2, y);
   doc.setFont("helvetica", "bold");
-  doc.text("$" + TARP_SYSTEM_CHARGE.toFixed(2), pageWidth - margin - 3, y, { align: "right" });
+  doc.text(fmt(TARP_SYSTEM_CHARGE), pageWidth - margin - 3, y, { align: "right" });
   doc.setFont("helvetica", "normal");
   y += 5;
 
@@ -292,7 +273,7 @@ export function generateEstimatePdf(data: PdfData): void {
     doc.setTextColor(...darkColor);
     doc.text("Material Delivery", margin + 2, y);
     doc.setFont("helvetica", "bold");
-    doc.text("$" + state.deliveryCost.toFixed(2), pageWidth - margin - 3, y, { align: "right" });
+    doc.text(fmt(state.deliveryCost), pageWidth - margin - 3, y, { align: "right" });
     doc.setFont("helvetica", "normal");
     y += 5;
   }
@@ -305,7 +286,7 @@ export function generateEstimatePdf(data: PdfData): void {
     doc.setTextColor(...darkColor);
     doc.text(item.description || "Custom item", margin + 2, y);
     doc.setFont("helvetica", "bold");
-    doc.text("$" + (item.amount || 0).toFixed(2), pageWidth - margin - 3, y, { align: "right" });
+    doc.text(fmt(item.amount || 0), pageWidth - margin - 3, y, { align: "right" });
     doc.setFont("helvetica", "normal");
     y += 5;
   }
@@ -316,7 +297,7 @@ export function generateEstimatePdf(data: PdfData): void {
 
   // Totals
   checkPageBreak(50);
-  doc.setFillColor(...lightBg);
+  doc.setFillColor(...cardColor);
   doc.rect(pageWidth / 2, y - 2, pageWidth / 2 - margin, 42, "F");
   const totalsX = pageWidth / 2 + 5;
   const totalsValX = pageWidth - margin - 3;
@@ -326,42 +307,35 @@ export function generateEstimatePdf(data: PdfData): void {
 
   doc.text("Materials Total", totalsX, y + 3);
   doc.setTextColor(...darkColor);
-  doc.text("$" + totalMaterialCost.toFixed(2), totalsValX, y + 3, { align: "right" });
+  doc.text(fmt(totalMaterialCost), totalsValX, y + 3, { align: "right" });
 
   doc.setTextColor(...grayColor);
   doc.text("Labor Total", totalsX, y + 9);
   doc.setTextColor(...darkColor);
-  doc.text("$" + totalLaborCost.toFixed(2), totalsValX, y + 9, { align: "right" });
-
-  if (steepPitchAdder > 0) {
-    doc.setTextColor(...grayColor);
-    doc.text("  Steep Pitch Adder", totalsX, y + 14);
-    doc.setTextColor(...darkColor);
-    doc.text("$" + steepPitchAdder.toFixed(2), totalsValX, y + 14, { align: "right" });
-  }
+  doc.text(fmt(totalLaborCost), totalsValX, y + 9, { align: "right" });
 
   doc.setTextColor(...grayColor);
-  doc.text("Additional Costs", totalsX, y + 20);
+  doc.text("Additional Costs", totalsX, y + 15);
   doc.setTextColor(...darkColor);
-  doc.text("$" + totalCustomCosts.toFixed(2), totalsValX, y + 20, { align: "right" });
+  doc.text(fmt(totalCustomCosts), totalsValX, y + 15, { align: "right" });
 
-  drawLine(y + 25);
+  drawLine(y + 20);
 
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...primaryColor);
-  doc.text("ESTIMATE TOTAL", totalsX, y + 33);
-  doc.text("$" + estimateTotal.toFixed(2), totalsValX, y + 33, { align: "right" });
+  doc.text("ESTIMATE TOTAL", totalsX, y + 28);
+  doc.text(fmt(estimateTotal), totalsValX, y + 28, { align: "right" });
 
   // Margin info
   if (targetMarginPct > 0 && requiredCustomerPrice > 0) {
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...grayColor);
-    doc.text("At " + targetMarginPct + "% margin, charge:", totalsX, y + 40);
+    doc.text("At " + targetMarginPct + "% margin, charge:", totalsX, y + 35);
     doc.setTextColor(...greenColor);
     doc.setFont("helvetica", "bold");
-    doc.text("$" + requiredCustomerPrice.toFixed(2), totalsValX, y + 40, { align: "right" });
+    doc.text(fmt(requiredCustomerPrice), totalsValX, y + 35, { align: "right" });
   }
 
   y += 50;

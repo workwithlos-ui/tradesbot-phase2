@@ -1,10 +1,9 @@
 import SectionAccordion from "@/components/SectionAccordion";
-import { formatCurrency } from "@/lib/utils";
 import { TARP_SYSTEM_CHARGE } from "@/lib/data";
 import type { AdditionalCostItem } from "@/lib/data";
 import { DollarSign, Truck, Plus, Trash2 } from "lucide-react";
 
-interface CustomCostsSectionProps {
+interface Props {
   deliveryEnabled: boolean;
   deliveryCost: number;
   onDeliveryChange: (enabled: boolean) => void;
@@ -17,25 +16,20 @@ interface CustomCostsSectionProps {
   totalCustomCosts: number;
 }
 
-export default function CustomCostsSection(props: CustomCostsSectionProps) {
-  const itemCount = props.additionalCosts.length + (props.deliveryEnabled ? 1 : 0);
+function fmt(n: number): string {
+  return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 
-  const rightContent = (
-    <div className="text-right">
-      <div className="text-sm font-bold font-num" style={{ color: "var(--primary)" }}>{formatCurrency(props.totalCustomCosts)}</div>
-      <div className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>
-        Tarp + {itemCount} item{itemCount !== 1 ? "s" : ""}
-      </div>
-    </div>
-  );
+export default function CustomCostsSection(props: Props) {
+  const itemCount = props.additionalCosts.length + (props.deliveryEnabled ? 1 : 0);
 
   return (
     <SectionAccordion
       icon={<DollarSign className="w-4 h-4" />}
       title="Additional Costs"
       subtitle="Tarp, delivery, and custom items"
-      rightContent={rightContent}
       defaultOpen={false}
+      badge={fmt(props.totalCustomCosts)}
     >
       <div className="space-y-4">
         {/* Fixed: Tarp System Charge */}
@@ -44,7 +38,7 @@ export default function CustomCostsSection(props: CustomCostsSectionProps) {
             <div className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>Tarp System Charge</div>
             <div className="text-[11px] mt-0.5" style={{ color: "var(--muted-foreground)" }}>Fixed $50 per job</div>
           </div>
-          <span className="text-sm font-bold font-num" style={{ color: "#FBBF24" }}>{formatCurrency(TARP_SYSTEM_CHARGE)}</span>
+          <span className="text-sm font-bold font-num" style={{ color: "#FBBF24" }}>{fmt(TARP_SYSTEM_CHARGE)}</span>
         </div>
 
         {/* Delivery Toggle */}
@@ -151,7 +145,7 @@ export default function CustomCostsSection(props: CustomCostsSectionProps) {
         {/* Section Total */}
         <div className="pt-3 flex items-center justify-between" style={{ borderTop: "1px solid var(--border)" }}>
           <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>Additional Costs Total</span>
-          <span className="text-lg font-bold font-num" style={{ color: "var(--primary)" }}>{formatCurrency(props.totalCustomCosts)}</span>
+          <span className="text-lg font-bold font-num" style={{ color: "var(--primary)" }}>{fmt(props.totalCustomCosts)}</span>
         </div>
       </div>
     </SectionAccordion>

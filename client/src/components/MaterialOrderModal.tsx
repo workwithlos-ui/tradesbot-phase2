@@ -1,18 +1,22 @@
 import { useState } from "react";
-import { MATERIAL_ITEMS, SHINGLE_TYPES, SUPPLIERS } from "@/lib/data";
+import { SHINGLE_TYPES, SUPPLIERS } from "@/lib/data";
 import type { EstimatorState } from "@/hooks/useEstimator";
-import { formatCurrency } from "@/lib/utils";
+import type { MaterialCostLine } from "@/lib/data";
 import { Copy, Printer, CheckCircle, X } from "lucide-react";
 
-interface MaterialOrderModalProps {
+function fmt(n: number): string {
+  return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+interface Props {
   isOpen: boolean;
   onClose: () => void;
   state: EstimatorState;
-  shingleSquares: number;
-  laborSquares: number;
+  materialCostLines: MaterialCostLine[];
+  totalMaterialCost: number;
 }
 
-export default function MaterialOrderModal({ isOpen, onClose, state, shingleSquares, laborSquares }: MaterialOrderModalProps) {
+export default function MaterialOrderModal({ isOpen, onClose, state, materialCostLines, totalMaterialCost }: Props) {
   const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
@@ -20,20 +24,7 @@ export default function MaterialOrderModal({ isOpen, onClose, state, shingleSqua
   const shingle = SHINGLE_TYPES.find((s) => s.id === state.shingleType);
   const supplier = SUPPLIERS.find((s) => s.id === state.supplier);
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-  const totalMaterialCost = MATERIAL_ITEMS.reduce(
-    (sum, item) => sum + (state.materialQtys[item.id] || 0) * item.unitPrice, 0
-  );
-
-  const orderLines = MATERIAL_ITEMS
-    .filter((item) => (state.materialQtys[item.id] || 0) > 0)
-    .map((item) => ({
-      lineNumber: item.lineNumber,
-      name: item.name,
-      qty: state.materialQtys[item.id] || 0,
-      unit: item.unit,
-      unitPrice: item.unitPrice,
-      total: (state.materialQtys[item.id] || 0) * item.unitPrice,
-    }));
+  const activeLines = materialCostLines.filter(l => l.qty > 0);
 
   const generateOrderText = () => {
     const lines = [
@@ -45,19 +36,19 @@ export default function MaterialOrderModal({ isOpen, onClose, state, shingleSqua
       `Address: ${state.address || "N/A"}`,
       `Supplier: ${supplier?.name || "ABC Supply"}`,
       `Shingle: ${shingle?.name || "N/A"}`,
-      `Squares: ${shingleSquares.toFixed(1)} shingle / ${laborSquares.toFixed(1)} labor`,
+      `Roof Squares: ${state.measurements.totalSquares}`,
       "-".repeat(60),
       "",
-      `${"#".padEnd(4)} ${"Item".padEnd(35)} ${"Qty".padStart(6)} ${"Unit".padEnd(10)} ${"Total".padStart(10)}`,
-      "-".repeat(70),
+      `${"Item".padEnd(35)} ${"Qty".padStart(6)} ${"Unit".padEnd(10)} ${"Total".padStart(10)}`,
+      "-".repeat(65),
     ];
-    for (const line of orderLines) {
+    for (const line of activeLines) {
       lines.push(
-        `${String(line.lineNumber).padEnd(4)} ${line.name.padEnd(35)} ${String(line.qty).padStart(6)} ${line.unit.padEnd(10)} ${formatCurrency(line.total).padStart(10)}`
+        `${line.name.padEnd(35)} ${String(line.qty).padStart(6)} ${line.unit.padEnd(10)} ${fmt(line.total).padStart(10)}`
       );
     }
-    lines.push("-".repeat(70));
-    lines.push(`${"".padEnd(4)} ${"TOTAL".padEnd(35)} ${"".padStart(6)} ${"".padEnd(10)} ${formatCurrency(totalMaterialCost).padStart(10)}`);
+    lines.push("-".repeat(65));
+    lines.push(`${"TOTAL".padEnd(35)} ${"".padStart(6)} ${"".padEnd(10)} ${fmt(totalMaterialCost).padStart(10)}`);
     lines.push("");
     lines.push("Notes: Please confirm pricing and delivery date.");
     lines.push(`Deliver to: ${state.address || "TBD"}`);
@@ -91,7 +82,7 @@ export default function MaterialOrderModal({ isOpen, onClose, state, shingleSqua
         <div className="flex items-center justify-between px-5 py-4 shrink-0" style={{ borderBottom: "1px solid var(--border)", background: "var(--card)" }}>
           <div>
             <h2 className="text-base font-bold" style={{ color: "var(--foreground)" }}>Material Order</h2>
-            <p className="text-[11px] mt-0.5" style={{ color: "var(--muted-foreground)" }}>{supplier?.name || "ABC Supply"} · {shingle?.name || "N/A"}</p>
+            <p className="text-[11px] mt-0.5" style={{ color: "var(--muted-foreground)" }}>{supplier?.name || "ABC Supply"} / {shingle?.name || "N/A"}</p>
           </div>
           <button onClick={onClose} className="p-2 rounded-lg transition-colors" style={{ color: "var(--muted-foreground)" }}>
             <X className="w-4 h-4" />
@@ -103,23 +94,22 @@ export default function MaterialOrderModal({ isOpen, onClose, state, shingleSqua
           <div className="rounded-lg p-3" style={{ background: "var(--secondary)" }}>
             <div className="grid grid-cols-2 gap-2 text-[11px]">
               <div><span style={{ color: "var(--muted-foreground)" }}>Date:</span> <span style={{ color: "var(--foreground)" }}>{today}</span></div>
-              <div><span style={{ color: "var(--muted-foreground)" }}>Customer:</span> <span style={{ color: "var(--foreground)" }}>{state.customerName || "—"}</span></div>
-              <div className="col-span-2"><span style={{ color: "var(--muted-foreground)" }}>Address:</span> <span style={{ color: "var(--foreground)" }}>{state.address || "—"}</span></div>
-              <div><span style={{ color: "var(--muted-foreground)" }}>Shingle Sq:</span> <span className="font-num font-medium" style={{ color: "var(--foreground)" }}>{shingleSquares.toFixed(1)}</span></div>
-              <div><span style={{ color: "var(--muted-foreground)" }}>Labor Sq:</span> <span className="font-num font-medium" style={{ color: "var(--foreground)" }}>{laborSquares.toFixed(1)}</span></div>
+              <div><span style={{ color: "var(--muted-foreground)" }}>Customer:</span> <span style={{ color: "var(--foreground)" }}>{state.customerName || "--"}</span></div>
+              <div className="col-span-2"><span style={{ color: "var(--muted-foreground)" }}>Address:</span> <span style={{ color: "var(--foreground)" }}>{state.address || "--"}</span></div>
+              <div><span style={{ color: "var(--muted-foreground)" }}>Roof Sq:</span> <span className="font-num font-medium" style={{ color: "var(--foreground)" }}>{state.measurements.totalSquares}</span></div>
+              <div><span style={{ color: "var(--muted-foreground)" }}>Waste:</span> <span className="font-num font-medium" style={{ color: "var(--foreground)" }}>{state.wasteFactor}%</span></div>
             </div>
           </div>
 
-          {orderLines.length === 0 ? (
+          {activeLines.length === 0 ? (
             <div className="text-center py-8 rounded-lg" style={{ border: "1px dashed var(--border)" }}>
-              <p className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>No materials entered yet.</p>
+              <p className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>No materials calculated yet. Enter roof measurements first.</p>
             </div>
           ) : (
             <div className="rounded-lg overflow-hidden" style={{ border: "1px solid var(--border)" }}>
               <table className="w-full text-[11px]">
                 <thead>
                   <tr style={{ background: "var(--secondary)" }}>
-                    <th className="text-left px-3 py-2 font-semibold" style={{ color: "var(--muted-foreground)" }}>#</th>
                     <th className="text-left px-3 py-2 font-semibold" style={{ color: "var(--muted-foreground)" }}>Item</th>
                     <th className="text-right px-3 py-2 font-semibold" style={{ color: "var(--muted-foreground)" }}>Qty</th>
                     <th className="text-left px-3 py-2 font-semibold hidden sm:table-cell" style={{ color: "var(--muted-foreground)" }}>Unit</th>
@@ -128,21 +118,20 @@ export default function MaterialOrderModal({ isOpen, onClose, state, shingleSqua
                   </tr>
                 </thead>
                 <tbody>
-                  {orderLines.map((line) => (
-                    <tr key={line.lineNumber} style={{ borderBottom: "1px solid var(--border)" }}>
-                      <td className="px-3 py-2 font-num" style={{ color: "var(--muted-foreground)" }}>{line.lineNumber}</td>
+                  {activeLines.map((line) => (
+                    <tr key={line.id} style={{ borderBottom: "1px solid var(--border)" }}>
                       <td className="px-3 py-2 font-medium" style={{ color: "var(--foreground)" }}>{line.name}</td>
                       <td className="px-3 py-2 text-right font-num font-bold" style={{ color: "var(--foreground)" }}>{line.qty}</td>
                       <td className="px-3 py-2 hidden sm:table-cell" style={{ color: "var(--muted-foreground)" }}>{line.unit}</td>
-                      <td className="px-3 py-2 text-right font-num hidden sm:table-cell" style={{ color: "var(--muted-foreground)" }}>{formatCurrency(line.unitPrice)}</td>
-                      <td className="px-3 py-2 text-right font-num font-semibold" style={{ color: "var(--foreground)" }}>{formatCurrency(line.total)}</td>
+                      <td className="px-3 py-2 text-right font-num hidden sm:table-cell" style={{ color: "var(--muted-foreground)" }}>{fmt(line.unitPrice)}</td>
+                      <td className="px-3 py-2 text-right font-num font-semibold" style={{ color: "var(--foreground)" }}>{fmt(line.total)}</td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
                   <tr style={{ background: "rgba(0,212,170,0.06)" }}>
-                    <td colSpan={5} className="px-3 py-2.5 font-bold" style={{ color: "var(--foreground)" }}>Total</td>
-                    <td className="px-3 py-2.5 text-right font-bold font-num" style={{ color: "var(--primary)" }}>{formatCurrency(totalMaterialCost)}</td>
+                    <td colSpan={4} className="px-3 py-2.5 font-bold" style={{ color: "var(--foreground)" }}>Total</td>
+                    <td className="px-3 py-2.5 text-right font-bold font-num" style={{ color: "var(--primary)" }}>{fmt(totalMaterialCost)}</td>
                   </tr>
                 </tfoot>
               </table>

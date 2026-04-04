@@ -18,15 +18,19 @@ import {
 import { toast } from "sonner";
 import { generateEstimatePdf } from "@/lib/generatePdf";
 import {
-  calculateShingleSquares,
-  calculateLaborSquares,
-  calculateMaterialCost,
-  calculateSteepPitchAdder,
-  LABOR_ITEMS,
-  BASE_LABOR_RATE,
+  SHINGLE_TYPES,
+  MARKET_CONFIGS,
   TARP_SYSTEM_CHARGE,
+  getDefaultMeasurements,
+  calculateMaterials,
+  calculateMaterialCostLines,
+  calculateLaborCostLines,
+  calculatePriceForMargin,
 } from "@/lib/data";
-import { formatCurrency } from "@/lib/utils";
+
+function fmt(n: number): string {
+  return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 
 export default function Estimates() {
   const [estimates, setEstimates] = useState<SavedEstimate[]>([]);
@@ -45,38 +49,38 @@ export default function Estimates() {
 
   const handleRegenPdf = (estimate: SavedEstimate) => {
     const { state } = estimate;
-    const shingleSquares = calculateShingleSquares(state.materialQtys);
-    const laborSquares = calculateLaborSquares(state.materialQtys);
-    const totalMaterialCost = calculateMaterialCost(state.materialQtys);
-    const steepPitchSquares = state.steepPitchSquares || {};
-    const steepPitchAdder = calculateSteepPitchAdder(steepPitchSquares);
-    const baseCost = laborSquares * (state.laborCosts?.["base-labor"] || BASE_LABOR_RATE);
-    let additionalLabor = 0;
-    for (const item of LABOR_ITEMS) {
-      if (item.isBaseLabor) continue;
-      const qty = state.laborQtys?.[item.id] || 0;
-      const cost = state.laborCosts?.[item.id] || item.defaultCostPerUnit;
-      additionalLabor += qty * cost;
-    }
-    const totalLaborCost = baseCost + steepPitchAdder + additionalLabor;
+    const measurements = state.measurements || getDefaultMeasurements();
+    const shingleType = SHINGLE_TYPES.find(s => s.id === state.shingleType) || SHINGLE_TYPES[0];
+    const market = MARKET_CONFIGS.find(m => m.id === state.market) || MARKET_CONFIGS[0];
+    const wasteFactor = state.wasteFactor ?? 8;
+
+    const calculatedMaterials = calculateMaterials(measurements, shingleType, wasteFactor);
+    const materialCostLines = calculateMaterialCostLines(calculatedMaterials, shingleType, measurements);
+    const laborCostLines = calculateLaborCostLines(measurements, calculatedMaterials, market.baseLaborRate, state.laborOverrides || {});
+
+    const totalMaterialCost = materialCostLines.reduce((sum, l) => sum + l.total, 0);
+    const totalLaborCost = laborCostLines.reduce((sum, l) => sum + l.total, 0);
     const tarpCharge = TARP_SYSTEM_CHARGE;
     const deliveryCostTotal = state.deliveryEnabled ? (state.deliveryCost || 0) : 0;
     const additionalCosts = state.additionalCosts || [];
     const additionalCostsTotal = additionalCosts.reduce((sum: number, item: { amount?: number }) => sum + (item.amount || 0), 0);
     const totalCustomCosts = tarpCharge + deliveryCostTotal + additionalCostsTotal;
     const estimateTotal = totalMaterialCost + totalLaborCost + totalCustomCosts;
+    const targetMarginPct = state.targetMarginPct ?? 40;
+    const requiredCustomerPrice = calculatePriceForMargin(estimateTotal, targetMarginPct);
 
     generateEstimatePdf({
       state,
-      shingleSquares,
-      laborSquares,
+      materialCostLines,
+      laborCostLines,
+      totalSquares: measurements.totalSquares,
       totalMaterialCost,
       totalLaborCost,
       tarpCharge,
-      deliveryCostTotal,
-      additionalCostsTotal,
       totalCustomCosts,
       estimateTotal,
+      requiredCustomerPrice,
+      targetMarginPct,
     });
     toast.success("PDF regenerated!");
   };
@@ -156,10 +160,10 @@ export default function Estimates() {
                         </div>
                         <div className="flex gap-2 mt-2">
                           <span className="pill" style={{ background: "rgba(0,212,170,0.1)", color: "var(--primary)" }}>
-                            {estimate.totalSquares.toFixed(1)} sq
+                            {estimate.totalSquares} sq
                           </span>
                           <span className="pill font-num font-bold" style={{ background: "var(--secondary)", color: "var(--foreground)" }}>
-                            {formatCurrency(estimate.estimateTotal)}
+                            {fmt(estimate.estimateTotal)}
                           </span>
                         </div>
                       </div>

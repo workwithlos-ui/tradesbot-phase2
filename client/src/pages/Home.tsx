@@ -1,6 +1,7 @@
 import AppHeader from "@/components/AppHeader";
 import TradeSelector from "@/components/TradeSelector";
 import JobInfoSection from "@/components/JobInfoSection";
+import RoofMeasurementsSection from "@/components/RoofMeasurementsSection";
 import MaterialsSection from "@/components/MaterialsSection";
 import LaborSection from "@/components/LaborSection";
 import CustomCostsSection from "@/components/CustomCostsSection";
@@ -15,35 +16,31 @@ import { saveEstimate } from "@/lib/estimateStorage";
 import { generateEstimatePdf } from "@/lib/generatePdf";
 
 export default function Home() {
-  const estimator = useEstimator();
-  const isShingleRoofing = estimator.state.selectedTrade === "shingle-roofing";
+  const e = useEstimator();
+  const isShingleRoofing = e.state.selectedTrade === "shingle-roofing";
 
   const handleSave = () => {
     const saved = saveEstimate(
-      estimator.state,
-      estimator.laborSquares,
-      estimator.estimateTotal
+      e.state,
+      e.totalSquares,
+      e.estimateTotal
     );
     toast.success(`Estimate "${saved.name}" saved.`);
   };
 
   const handleGeneratePdf = () => {
     generateEstimatePdf({
-      state: estimator.state,
-      shingleSquares: estimator.shingleSquares,
-      laborSquares: estimator.laborSquares,
-      totalMaterialCost: estimator.totalMaterialCost,
-      baseLaborCost: estimator.baseLaborCost,
-      additionalLaborCost: estimator.additionalLaborCost,
-      steepPitchAdder: estimator.steepPitchAdder,
-      totalLaborCost: estimator.totalLaborCost,
-      tarpCharge: estimator.tarpCharge,
-      deliveryCostTotal: estimator.deliveryCostTotal,
-      additionalCostsTotal: estimator.additionalCostsTotal,
-      totalCustomCosts: estimator.totalCustomCosts,
-      estimateTotal: estimator.estimateTotal,
-      requiredCustomerPrice: estimator.requiredCustomerPrice,
-      targetMarginPct: estimator.state.targetMarginPct,
+      state: e.state,
+      materialCostLines: e.materialCostLines,
+      laborCostLines: e.laborCostLines,
+      totalSquares: e.totalSquares,
+      totalMaterialCost: e.totalMaterialCost,
+      totalLaborCost: e.totalLaborCost,
+      tarpCharge: e.tarpCharge,
+      totalCustomCosts: e.totalCustomCosts,
+      estimateTotal: e.estimateTotal,
+      requiredCustomerPrice: e.requiredCustomerPrice,
+      targetMarginPct: e.state.targetMarginPct,
     });
     toast.success("PDF generated!");
   };
@@ -52,8 +49,8 @@ export default function Home() {
     <div className="min-h-screen flex flex-col" style={{ background: "var(--background)" }}>
       <AppHeader />
       <TradeSelector
-        selectedTrade={estimator.state.selectedTrade}
-        onTradeChange={estimator.setTrade}
+        selectedTrade={e.state.selectedTrade}
+        onTradeChange={e.setTrade}
       />
 
       {/* Saved estimates link */}
@@ -76,53 +73,54 @@ export default function Home() {
             {/* Left column: Form sections */}
             <div className="flex-1 space-y-3 min-w-0">
               <JobInfoSection
-                customerName={estimator.state.customerName}
-                customerPhone={estimator.state.customerPhone}
-                customerEmail={estimator.state.customerEmail}
-                jobName={estimator.state.jobName}
-                address={estimator.state.address}
-                supplier={estimator.state.supplier}
-                shingleType={estimator.state.shingleType}
-                market={estimator.state.market}
-                steepPitchSquares={estimator.state.steepPitchSquares}
-                onJobInfoChange={estimator.setJobInfo}
-                onSupplierChange={estimator.setSupplier}
-                onShingleTypeChange={estimator.setShingleType}
-                onMarketChange={estimator.setMarket}
-                onSteepPitchSquaresChange={estimator.setSteepPitchSquares}
+                customerName={e.state.customerName}
+                customerPhone={e.state.customerPhone}
+                customerEmail={e.state.customerEmail}
+                jobName={e.state.jobName}
+                address={e.state.address}
+                supplier={e.state.supplier}
+                shingleType={e.state.shingleType}
+                market={e.state.market}
+                pitch={e.state.measurements.pitch}
+                stories={e.state.measurements.stories}
+                onJobInfoChange={e.setJobInfo}
+                onSupplierChange={e.setSupplier}
+                onShingleTypeChange={e.setShingleType}
+                onMarketChange={e.setMarket}
+                onPitchChange={(v) => e.setMeasurement("pitch", v)}
+                onStoriesChange={(v) => e.setMeasurement("stories", v)}
+              />
+              <RoofMeasurementsSection
+                measurements={e.state.measurements}
+                wasteFactor={e.state.wasteFactor}
+                calculatedMaterials={e.calculatedMaterials}
+                shingleBundlesPerSq={e.shingleTypeObj.bundlesPerSquare}
+                onMeasurementChange={e.setMeasurement}
+                onWasteFactorChange={e.setWasteFactor}
               />
               <MaterialsSection
-                materialQtys={estimator.state.materialQtys}
-                onMaterialQtyChange={estimator.setMaterialQty}
-                shingleSquares={estimator.shingleSquares}
-                laborSquares={estimator.laborSquares}
-                totalMaterialCost={estimator.totalMaterialCost}
-                wasteFactor={estimator.state.wasteFactor}
-                onWasteFactorChange={estimator.setWasteFactor}
+                materialCostLines={e.materialCostLines}
+                totalMaterialCost={e.totalMaterialCost}
+                totalSquares={e.totalSquares}
               />
               <LaborSection
-                laborSquares={estimator.laborSquares}
-                laborQtys={estimator.state.laborQtys}
-                laborCosts={estimator.state.laborCosts}
-                steepPitchSquares={estimator.state.steepPitchSquares}
-                baseLaborCost={estimator.baseLaborCost}
-                steepPitchAdder={estimator.steepPitchAdder}
-                additionalLaborCost={estimator.additionalLaborCost}
-                totalLaborCost={estimator.totalLaborCost}
-                onLaborQtyChange={estimator.setLaborQty}
-                onLaborCostChange={estimator.setLaborCost}
+                laborCostLines={e.laborCostLines}
+                totalLaborCost={e.totalLaborCost}
+                totalSquares={e.totalSquares}
+                laborOverrides={e.state.laborOverrides}
+                onLaborOverride={e.setLaborOverride}
               />
               <CustomCostsSection
-                deliveryEnabled={estimator.state.deliveryEnabled}
-                deliveryCost={estimator.state.deliveryCost}
-                onDeliveryChange={estimator.setDelivery}
-                onDeliveryCostChange={estimator.setDeliveryCost}
-                additionalCosts={estimator.state.additionalCosts}
-                onAddAdditionalCost={estimator.addAdditionalCost}
-                onUpdateAdditionalCost={estimator.updateAdditionalCost}
-                onRemoveAdditionalCost={estimator.removeAdditionalCost}
-                tarpCharge={estimator.tarpCharge}
-                totalCustomCosts={estimator.totalCustomCosts}
+                deliveryEnabled={e.state.deliveryEnabled}
+                deliveryCost={e.state.deliveryCost}
+                onDeliveryChange={e.setDelivery}
+                onDeliveryCostChange={e.setDeliveryCost}
+                additionalCosts={e.state.additionalCosts}
+                onAddAdditionalCost={e.addAdditionalCost}
+                onUpdateAdditionalCost={e.updateAdditionalCost}
+                onRemoveAdditionalCost={e.removeAdditionalCost}
+                tarpCharge={e.tarpCharge}
+                totalCustomCosts={e.totalCustomCosts}
               />
             </div>
 
@@ -130,28 +128,25 @@ export default function Home() {
             <div className="hidden lg:block w-80 shrink-0">
               <div className="sticky top-6">
                 <EstimateSummary
-                  state={estimator.state}
-                  shingleSquares={estimator.shingleSquares}
-                  laborSquares={estimator.laborSquares}
-                  materialItemCount={estimator.materialItemCount}
-                  totalMaterialCost={estimator.totalMaterialCost}
-                  baseLaborCost={estimator.baseLaborCost}
-                  additionalLaborCost={estimator.additionalLaborCost}
-                  steepPitchAdder={estimator.steepPitchAdder}
-                  totalLaborCost={estimator.totalLaborCost}
-                  tarpCharge={estimator.tarpCharge}
-                  totalCustomCosts={estimator.totalCustomCosts}
-                  estimateTotal={estimator.estimateTotal}
-                  requiredCustomerPrice={estimator.requiredCustomerPrice}
-                  pricePerSquare={estimator.pricePerSquare}
-                  costPerSquare={estimator.costPerSquare}
-                  insuranceScopeMargin={estimator.insuranceScopeMargin}
-                  insuranceScopePerSquare={estimator.insuranceScopePerSquare}
-                  onReset={estimator.resetForm}
+                  state={e.state}
+                  materialCostLines={e.materialCostLines}
+                  laborCostLines={e.laborCostLines}
+                  totalSquares={e.totalSquares}
+                  totalMaterialCost={e.totalMaterialCost}
+                  totalLaborCost={e.totalLaborCost}
+                  tarpCharge={e.tarpCharge}
+                  totalCustomCosts={e.totalCustomCosts}
+                  estimateTotal={e.estimateTotal}
+                  requiredCustomerPrice={e.requiredCustomerPrice}
+                  pricePerSquare={e.pricePerSquare}
+                  costPerSquare={e.costPerSquare}
+                  insuranceScopeMargin={e.insuranceScopeMargin}
+                  insuranceScopePerSquare={e.insuranceScopePerSquare}
+                  onReset={e.resetForm}
                   onSave={handleSave}
                   onGeneratePdf={handleGeneratePdf}
-                  onTargetMarginChange={estimator.setTargetMarginPct}
-                  onInsuranceScopePriceChange={estimator.setInsuranceScopePrice}
+                  onTargetMarginChange={e.setTargetMarginPct}
+                  onInsuranceScopePriceChange={e.setInsuranceScopePrice}
                 />
               </div>
             </div>
@@ -159,26 +154,24 @@ export default function Home() {
         </main>
       ) : (
         <main className="flex-1 container py-6">
-          <ComingSoon tradeId={estimator.state.selectedTrade} />
+          <ComingSoon tradeId={e.state.selectedTrade} />
         </main>
       )}
 
       <MobileSummaryBar
-        laborSquares={estimator.laborSquares}
-        materialItemCount={estimator.materialItemCount}
-        laborItemCount={estimator.laborItemCount}
-        estimateTotal={estimator.estimateTotal}
-        jobName={estimator.state.jobName}
-        address={estimator.state.address}
-        shingleSquares={estimator.shingleSquares}
-        materialsTotal={estimator.totalMaterialCost}
-        laborTotal={estimator.totalLaborCost}
-        customCostsTotal={estimator.totalCustomCosts}
-        targetMarginPct={estimator.state.targetMarginPct}
-        requiredCustomerPrice={estimator.requiredCustomerPrice}
-        onTargetMarginChange={estimator.setTargetMarginPct}
-        onGeneratePdf={handleGeneratePdf}
+        state={e.state}
+        totalSquares={e.totalSquares}
+        totalMaterialCost={e.totalMaterialCost}
+        totalLaborCost={e.totalLaborCost}
+        totalCustomCosts={e.totalCustomCosts}
+        estimateTotal={e.estimateTotal}
+        requiredCustomerPrice={e.requiredCustomerPrice}
+        costPerSquare={e.costPerSquare}
+        pricePerSquare={e.pricePerSquare}
+        onTargetMarginChange={e.setTargetMarginPct}
+        onReset={e.resetForm}
         onSave={handleSave}
+        onGeneratePdf={handleGeneratePdf}
       />
     </div>
   );

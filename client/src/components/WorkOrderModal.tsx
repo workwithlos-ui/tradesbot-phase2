@@ -1,19 +1,22 @@
 import { useState } from "react";
-import { LABOR_ITEMS, SHINGLE_TYPES, STEEP_PITCH_TIERS, MARKET_CONFIGS } from "@/lib/data";
+import { SHINGLE_TYPES, MARKET_CONFIGS } from "@/lib/data";
 import type { EstimatorState } from "@/hooks/useEstimator";
-import { formatCurrency } from "@/lib/utils";
+import type { LaborCostLine } from "@/lib/data";
 import { Copy, Printer, CheckCircle, X } from "lucide-react";
 
-interface WorkOrderModalProps {
+function fmt(n: number): string {
+  return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+interface Props {
   isOpen: boolean;
   onClose: () => void;
   state: EstimatorState;
-  shingleSquares: number;
-  laborSquares: number;
-  laborTotal: number;
+  laborCostLines: LaborCostLine[];
+  totalLaborCost: number;
 }
 
-export default function WorkOrderModal({ isOpen, onClose, state, shingleSquares, laborSquares, laborTotal }: WorkOrderModalProps) {
+export default function WorkOrderModal({ isOpen, onClose, state, laborCostLines, totalLaborCost }: Props) {
   const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
@@ -21,30 +24,16 @@ export default function WorkOrderModal({ isOpen, onClose, state, shingleSquares,
   const shingle = SHINGLE_TYPES.find((s) => s.id === state.shingleType);
   const market = MARKET_CONFIGS.find((m) => m.id === state.market);
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-
-  const baseRate = state.laborCosts["base-labor"] || 80;
-  const baseLaborCost = laborSquares * baseRate;
-
-  const activeLaborItems = LABOR_ITEMS
-    .filter((item) => !item.isBaseLabor && (state.laborQtys[item.id] || 0) > 0)
-    .map((item) => ({
-      name: item.name,
-      qty: state.laborQtys[item.id] || 0,
-      unit: item.unit,
-      costPerUnit: state.laborCosts[item.id] || item.defaultCostPerUnit,
-      total: (state.laborQtys[item.id] || 0) * (state.laborCosts[item.id] || item.defaultCostPerUnit),
-      description: item.description,
-    }));
-
-  const activePitchTiers = STEEP_PITCH_TIERS.filter((t) => (state.steepPitchSquares[t.id] || 0) > 0);
-  const steepPitchAdder = activePitchTiers.reduce((sum, t) => sum + (state.steepPitchSquares[t.id] || 0) * t.adderPerSquare, 0);
+  const activeLines = laborCostLines.filter(l => l.qty > 0);
+  const m = state.measurements;
 
   const specialConditions: string[] = [];
-  if ((state.laborQtys["hand-load"] || 0) > 0) specialConditions.push("Hand load required");
-  if ((state.laborQtys["two-story-charge"] || 0) > 0) specialConditions.push("Two-story home");
-  if ((state.laborQtys["shake-tear-off"] || 0) > 0) specialConditions.push("Shake/wood shingle tear off");
-  if ((state.laborQtys["access-charge"] || 0) > 0) specialConditions.push("Special access — dump trailer/drag trash");
-  if (activePitchTiers.length > 0) specialConditions.push(`Steep pitch: ${activePitchTiers.map((t) => t.label).join(", ")}`);
+  if (m.shakeTearoff) specialConditions.push("Cedar shake tear off");
+  if (m.handLoad) specialConditions.push("Hand load required");
+  if (m.noDumpsterAccess) specialConditions.push("No dumpster access -- drag trash charge");
+  if (state.stories >= 2) specialConditions.push("Two-story home (+$10/sq)");
+  if (state.pitch >= 8) specialConditions.push(`Steep pitch: ${state.pitch}/12`);
+  if (state.pitch <= 3) specialConditions.push("Low slope -- modified bitumen required");
 
   const generateWorkOrderText = () => {
     const lines = [
@@ -56,7 +45,8 @@ export default function WorkOrderModal({ isOpen, onClose, state, shingleSquares,
       `Address: ${state.address || "N/A"}`,
       `Market: ${market?.name || "St. Louis, MO"}`,
       `Shingle: ${shingle?.name || "N/A"}`,
-      `Squares: ${shingleSquares.toFixed(1)} shingle / ${laborSquares.toFixed(1)} labor`,
+      `Roof Squares: ${m.totalSquares}`,
+      `Pitch: ${state.pitch}/12`,
       "",
     ];
     if (specialConditions.length > 0) {
@@ -66,26 +56,11 @@ export default function WorkOrderModal({ isOpen, onClose, state, shingleSquares,
     }
     lines.push("LABOR SCOPE:");
     lines.push("-".repeat(60));
-    lines.push(`  Base Labor: ${laborSquares.toFixed(1)} sq x $${baseRate}/sq = ${formatCurrency(baseLaborCost)}`);
-    lines.push("  Includes: tear off, install, underlayment, ice/water, drip edges,");
-    lines.push("            valley metal, pipe jacks, haul off, clean up");
-    if (activePitchTiers.length > 0) {
-      lines.push("");
-      lines.push("  Steep Pitch:");
-      activePitchTiers.forEach((tier) => {
-        const sq = state.steepPitchSquares[tier.id] || 0;
-        lines.push(`    ${tier.label}: ${sq} sq x $${tier.adderPerSquare}/sq = ${formatCurrency(sq * tier.adderPerSquare)}`);
-      });
-    }
-    if (activeLaborItems.length > 0) {
-      lines.push("");
-      lines.push("  Additional:");
-      activeLaborItems.forEach((item) => {
-        lines.push(`    ${item.name}: ${item.qty} ${item.unit} x $${item.costPerUnit} = ${formatCurrency(item.total)}`);
-      });
+    for (const line of activeLines) {
+      lines.push(`  ${line.name}: ${line.qty} ${line.unit} x $${line.rate} = ${fmt(line.total)}`);
     }
     lines.push("-".repeat(60));
-    lines.push(`  TOTAL LABOR: ${formatCurrency(laborTotal)}`);
+    lines.push(`  TOTAL LABOR: ${fmt(totalLaborCost)}`);
     lines.push("");
     lines.push("Payment due upon completion and inspection.");
     return lines.join("\n");
@@ -131,11 +106,12 @@ export default function WorkOrderModal({ isOpen, onClose, state, shingleSquares,
             <div className="grid grid-cols-2 gap-2 text-[11px]">
               <div><span style={{ color: "var(--muted-foreground)" }}>Date:</span> <span style={{ color: "var(--foreground)" }}>{today}</span></div>
               <div><span style={{ color: "var(--muted-foreground)" }}>Market:</span> <span style={{ color: "var(--foreground)" }}>{market?.name || "St. Louis"}</span></div>
-              <div><span style={{ color: "var(--muted-foreground)" }}>Customer:</span> <span style={{ color: "var(--foreground)" }}>{state.customerName || "—"}</span></div>
-              <div><span style={{ color: "var(--muted-foreground)" }}>Phone:</span> <span style={{ color: "var(--foreground)" }}>{state.customerPhone || "—"}</span></div>
-              <div className="col-span-2"><span style={{ color: "var(--muted-foreground)" }}>Address:</span> <span style={{ color: "var(--foreground)" }}>{state.address || "—"}</span></div>
-              <div><span style={{ color: "var(--muted-foreground)" }}>Shingle:</span> <span style={{ color: "var(--foreground)" }}>{shingle?.name || "—"}</span></div>
-              <div><span style={{ color: "var(--muted-foreground)" }}>Squares:</span> <span className="font-num" style={{ color: "var(--foreground)" }}>{shingleSquares.toFixed(1)} / {laborSquares.toFixed(1)} labor</span></div>
+              <div><span style={{ color: "var(--muted-foreground)" }}>Customer:</span> <span style={{ color: "var(--foreground)" }}>{state.customerName || "--"}</span></div>
+              <div><span style={{ color: "var(--muted-foreground)" }}>Phone:</span> <span style={{ color: "var(--foreground)" }}>{state.customerPhone || "--"}</span></div>
+              <div className="col-span-2"><span style={{ color: "var(--muted-foreground)" }}>Address:</span> <span style={{ color: "var(--foreground)" }}>{state.address || "--"}</span></div>
+              <div><span style={{ color: "var(--muted-foreground)" }}>Shingle:</span> <span style={{ color: "var(--foreground)" }}>{shingle?.name || "--"}</span></div>
+              <div><span style={{ color: "var(--muted-foreground)" }}>Pitch:</span> <span className="font-num" style={{ color: "var(--foreground)" }}>{state.pitch}/12</span></div>
+              <div><span style={{ color: "var(--muted-foreground)" }}>Roof Sq:</span> <span className="font-num" style={{ color: "var(--foreground)" }}>{m.totalSquares}</span></div>
             </div>
           </div>
 
@@ -160,48 +136,16 @@ export default function WorkOrderModal({ isOpen, onClose, state, shingleSquares,
               <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--muted-foreground)" }}>Labor Scope</span>
             </div>
 
-            <div className="p-4" style={{ borderBottom: "1px solid var(--border)" }}>
-              <div className="flex items-center justify-between mb-1.5">
-                <div>
-                  <span className="text-[13px] font-semibold" style={{ color: "var(--foreground)" }}>Base Labor</span>
-                  <span className="text-[11px] ml-2" style={{ color: "var(--muted-foreground)" }}>
-                    {laborSquares.toFixed(1)} sq × ${baseRate}/sq
-                  </span>
-                </div>
-                <span className="text-[13px] font-bold font-num" style={{ color: "var(--foreground)" }}>{formatCurrency(baseLaborCost)}</span>
-              </div>
-              <p className="text-[10px] leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
-                Tear off, install shingles, underlayment, ice/water shield, drip edges, valley metal, pipe jacks, haul off, clean up
-              </p>
-            </div>
-
-            {steepPitchAdder > 0 && (
-              <div className="p-4" style={{ borderBottom: "1px solid var(--border)", background: "rgba(251,191,36,0.04)" }}>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[13px] font-semibold" style={{ color: "var(--foreground)" }}>Steep Pitch</span>
-                  <span className="text-[13px] font-bold font-num" style={{ color: "#FBBF24" }}>{formatCurrency(steepPitchAdder)}</span>
-                </div>
-                {activePitchTiers.map((tier) => {
-                  const sq = state.steepPitchSquares[tier.id] || 0;
-                  return (
-                    <div key={tier.id} className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>
-                      {tier.label}: {sq} sq × ${tier.adderPerSquare}/sq = {formatCurrency(sq * tier.adderPerSquare)}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {activeLaborItems.map((item) => (
-              <div key={item.name} className="p-4" style={{ borderBottom: "1px solid var(--border)" }}>
+            {activeLines.map((line) => (
+              <div key={line.id} className="p-4" style={{ borderBottom: "1px solid var(--border)" }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[13px] font-medium" style={{ color: "var(--foreground)" }}>{item.name}</span>
+                    <span className="text-[13px] font-medium" style={{ color: "var(--foreground)" }}>{line.name}</span>
                     <span className="text-[11px] ml-2" style={{ color: "var(--muted-foreground)" }}>
-                      {item.qty} {item.unit} × ${item.costPerUnit}
+                      {line.qty} {line.unit} x ${line.rate}
                     </span>
                   </div>
-                  <span className="text-[13px] font-bold font-num" style={{ color: "var(--foreground)" }}>{formatCurrency(item.total)}</span>
+                  <span className="text-[13px] font-bold font-num" style={{ color: "var(--foreground)" }}>{fmt(line.total)}</span>
                 </div>
               </div>
             ))}
@@ -209,7 +153,7 @@ export default function WorkOrderModal({ isOpen, onClose, state, shingleSquares,
             <div className="p-4" style={{ background: "rgba(0,212,170,0.06)" }}>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold" style={{ color: "var(--foreground)" }}>Total Labor</span>
-                <span className="text-lg font-bold font-num" style={{ color: "var(--primary)" }}>{formatCurrency(laborTotal)}</span>
+                <span className="text-lg font-bold font-num" style={{ color: "var(--primary)" }}>{fmt(totalLaborCost)}</span>
               </div>
             </div>
           </div>
