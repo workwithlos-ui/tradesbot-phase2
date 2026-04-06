@@ -13,7 +13,7 @@ export interface SavedEstimate {
   state: EstimatorState;
 }
 
-const STORAGE_KEY = "tradesbot-estimates";
+const STORAGE_KEY = "shingles-ai-estimates";
 
 export function getSavedEstimates(): SavedEstimate[] {
   try {

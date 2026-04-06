@@ -13,8 +13,8 @@ export default function AppHeader() {
             </svg>
           </div>
           <div className="flex items-baseline gap-1.5">
-            <span className="font-bold text-sm tracking-tight" style={{ color: "var(--foreground)" }}>TradesBot</span>
-            <span className="text-[11px] font-medium" style={{ color: "var(--muted-foreground)" }}>Estimator</span>
+            <span className="font-bold text-sm tracking-tight" style={{ color: "var(--foreground)" }}>Shingles.ai</span>
+            <span className="text-[11px] font-medium" style={{ color: "var(--muted-foreground)" }}>Roofing Estimator</span>
           </div>
         </div>
         <Link

@@ -1,5 +1,5 @@
 // ============================================================
-// TradesBot Data Layer v4 -- Measurement-Driven Auto-Calculator
+// Shingles.ai Data Layer v4 -- Measurement-Driven Auto-Calculator
 // ============================================================
 
 // ---- Interfaces ----
