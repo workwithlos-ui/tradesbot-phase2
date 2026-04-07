@@ -81,14 +81,10 @@ export default function Home() {
                 supplier={e.state.supplier}
                 shingleType={e.state.shingleType}
                 market={e.state.market}
-                pitch={e.state.measurements.pitch}
-                stories={e.state.measurements.stories}
                 onJobInfoChange={e.setJobInfo}
                 onSupplierChange={e.setSupplier}
                 onShingleTypeChange={e.setShingleType}
                 onMarketChange={e.setMarket}
-                onPitchChange={(v) => e.setMeasurement("pitch", v)}
-                onStoriesChange={(v) => e.setMeasurement("stories", v)}
               />
               <RoofMeasurementsSection
                 measurements={e.state.measurements}

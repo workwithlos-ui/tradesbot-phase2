@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { SHINGLE_TYPES, SUPPLIERS } from "@/lib/data";
+import { SHINGLE_TYPES, SUPPLIERS, getTotalSquares } from "@/lib/data";
 import type { EstimatorState } from "@/hooks/useEstimator";
 import type { MaterialCostLine } from "@/lib/data";
 import { Copy, Printer, CheckCircle, X } from "lucide-react";
@@ -36,7 +36,7 @@ export default function MaterialOrderModal({ isOpen, onClose, state, materialCos
       `Address: ${state.address || "N/A"}`,
       `Supplier: ${supplier?.name || "ABC Supply"}`,
       `Shingle: ${shingle?.name || "N/A"}`,
-      `Roof Squares: ${state.measurements.totalSquares}`,
+      `Roof Squares: ${getTotalSquares(state.measurements)}`,
       "-".repeat(60),
       "",
       `${"Item".padEnd(35)} ${"Qty".padStart(6)} ${"Unit".padEnd(10)} ${"Total".padStart(10)}`,
@@ -96,7 +96,7 @@ export default function MaterialOrderModal({ isOpen, onClose, state, materialCos
               <div><span style={{ color: "var(--muted-foreground)" }}>Date:</span> <span style={{ color: "var(--foreground)" }}>{today}</span></div>
               <div><span style={{ color: "var(--muted-foreground)" }}>Customer:</span> <span style={{ color: "var(--foreground)" }}>{state.customerName || "--"}</span></div>
               <div className="col-span-2"><span style={{ color: "var(--muted-foreground)" }}>Address:</span> <span style={{ color: "var(--foreground)" }}>{state.address || "--"}</span></div>
-              <div><span style={{ color: "var(--muted-foreground)" }}>Roof Sq:</span> <span className="font-num font-medium" style={{ color: "var(--foreground)" }}>{state.measurements.totalSquares}</span></div>
+              <div><span style={{ color: "var(--muted-foreground)" }}>Roof Sq:</span> <span className="font-num font-medium" style={{ color: "var(--foreground)" }}>{getTotalSquares(state.measurements)}</span></div>
               <div><span style={{ color: "var(--muted-foreground)" }}>Waste:</span> <span className="font-num font-medium" style={{ color: "var(--foreground)" }}>{state.wasteFactor}%</span></div>
             </div>
           </div>

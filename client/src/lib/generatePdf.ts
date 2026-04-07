@@ -143,7 +143,7 @@ export function generateEstimatePdf(data: PdfData): void {
     "Shingle: " + shingleName,
     "Market: " + marketName,
     "Roof Squares: " + totalSquares,
-    "Pitch: " + m.pitch + "/12",
+    "Pitch: " + (m.pitchBaseSq ? m.pitchBaseSq + " base" : "") + (m.pitch89Sq ? ", " + m.pitch89Sq + " at 8-9" : "") + (m.pitch1011Sq ? ", " + m.pitch1011Sq + " at 10-11" : "") + (m.pitch12PlusSq ? ", " + m.pitch12PlusSq + " at 12+" : "") + (m.pitchMansardSq ? ", " + m.pitchMansardSq + " mansard" : ""),
     "Waste Factor: " + state.wasteFactor + "%",
   ];
   jobLines.forEach((line) => { doc.text(line, margin + colWidth + 6, rightY); rightY += 4.5; });

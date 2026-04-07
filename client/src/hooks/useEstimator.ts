@@ -8,6 +8,7 @@ import {
   WASTE_FACTOR_DEFAULT,
   BASE_LABOR_RATE,
   getDefaultMeasurements,
+  getTotalSquares,
   calculateMaterials,
   calculateMaterialCostLines,
   calculateLaborCostLines,
@@ -139,7 +140,7 @@ export function useEstimator() {
     [estimateTotal, state.targetMarginPct]
   );
 
-  const totalSquares = state.measurements.totalSquares;
+  const totalSquares = useMemo(() => getTotalSquares(state.measurements), [state.measurements]);
 
   const pricePerSquare = useMemo(
     () => totalSquares > 0 ? requiredCustomerPrice / totalSquares : 0,

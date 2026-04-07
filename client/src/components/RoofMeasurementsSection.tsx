@@ -1,5 +1,5 @@
 import SectionAccordion from "@/components/SectionAccordion";
-import { VENT_OPTIONS, WASTE_FACTOR_MIN, WASTE_FACTOR_MAX } from "@/lib/data";
+import { VENT_OPTIONS, WASTE_FACTOR_MIN, WASTE_FACTOR_MAX, getTotalSquares } from "@/lib/data";
 import type { RoofMeasurements, CalculatedMaterials } from "@/lib/data";
 import { Ruler, ChevronDown } from "lucide-react";
 
@@ -42,7 +42,7 @@ export default function RoofMeasurementsSection(props: Props) {
   const exhaustOptions = VENT_OPTIONS.filter(v => v.type === "exhaust");
   const intakeOptions = VENT_OPTIONS.filter(v => v.type === "intake");
 
-  const totalSq = m.totalSquares;
+  const totalSq = getTotalSquares(m);
   const baseBundles = calc.shingleBundlesBase;
   const withWaste = calc.shingleBundles;
 
@@ -59,33 +59,24 @@ export default function RoofMeasurementsSection(props: Props) {
       badge={totalSq > 0 ? `${totalSq} SQ` : undefined}
     >
       <div className="space-y-5">
-        {/* Squares + Waste */}
+        {/* Multi-Pitch Squares */}
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--muted-foreground)" }}>Roof Size & Waste</p>
-          <div className="grid grid-cols-2 gap-3">
-            <NumField label="Total Roof Squares" suffix="SQ" value={m.totalSquares} onChange={v => props.onMeasurementChange("totalSquares", v)} />
-            <div>
-              <label className="field-label">Waste Factor</label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="range"
-                  min={WASTE_FACTOR_MIN}
-                  max={WASTE_FACTOR_MAX}
-                  step={1}
-                  value={wasteFactor}
-                  onChange={e => props.onWasteFactorChange(parseInt(e.target.value))}
-                  className="flex-1"
-                  style={{ accentColor: "var(--primary)", height: "44px" }}
-                />
-                <span className="font-num text-sm font-semibold w-10 text-right" style={{ color: "var(--primary)" }}>{wasteFactor}%</span>
-              </div>
-            </div>
+          <p className="text-[10px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--muted-foreground)" }}>Squares by Pitch</p>
+          <p className="text-[10px] mb-3" style={{ color: "var(--muted-foreground)" }}>
+            Enter squares at each pitch range. Base rate (4-7) has no adder. Steep pitches add labor.
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <NumField label="4-7 Pitch (Base)" suffix="SQ" value={m.pitchBaseSq} onChange={v => props.onMeasurementChange("pitchBaseSq", v)} />
+            <NumField label="8-9 Pitch (+$10/sq)" suffix="SQ" value={m.pitch89Sq} onChange={v => props.onMeasurementChange("pitch89Sq", v)} />
+            <NumField label="10-11 Pitch (+$20/sq)" suffix="SQ" value={m.pitch1011Sq} onChange={v => props.onMeasurementChange("pitch1011Sq", v)} />
+            <NumField label="12+ Pitch (+$30/sq)" suffix="SQ" value={m.pitch12PlusSq} onChange={v => props.onMeasurementChange("pitch12PlusSq", v)} />
+            <NumField label="Mansard (+$40/sq)" suffix="SQ" value={m.pitchMansardSq} onChange={v => props.onMeasurementChange("pitchMansardSq", v)} />
           </div>
           {totalSq > 0 && (
             <div className="mt-3 p-3 rounded-lg surface-highlight">
               <div className="flex items-center justify-between text-[12px]">
                 <span style={{ color: "var(--muted-foreground)" }}>
-                  {props.shingleBundlesPerSq} bndl/sq x {totalSq} sq = {baseBundles} base
+                  Total: {totalSq} SQ x {props.shingleBundlesPerSq} bndl/sq = {baseBundles} base
                 </span>
                 <span className="font-num font-semibold" style={{ color: "var(--primary)" }}>
                   {withWaste} bundles
@@ -96,6 +87,47 @@ export default function RoofMeasurementsSection(props: Props) {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Waste Factor */}
+        <div className="pt-4" style={{ borderTop: "1px solid var(--border)" }}>
+          <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--muted-foreground)" }}>Waste Factor</p>
+          <div className="flex items-center gap-3">
+            <input
+              type="range"
+              min={WASTE_FACTOR_MIN}
+              max={WASTE_FACTOR_MAX}
+              step={1}
+              value={wasteFactor}
+              onChange={e => props.onWasteFactorChange(parseInt(e.target.value))}
+              className="flex-1"
+              style={{ accentColor: "var(--primary)", height: "44px" }}
+            />
+            <span className="font-num text-sm font-semibold w-10 text-right" style={{ color: "var(--primary)" }}>{wasteFactor}%</span>
+          </div>
+        </div>
+
+        {/* Stories */}
+        <div className="pt-4" style={{ borderTop: "1px solid var(--border)" }}>
+          <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--muted-foreground)" }}>Building</p>
+          <div className="grid grid-cols-2 gap-2">
+            {([1, 2] as const).map(s => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => props.onMeasurementChange("stories", s)}
+                className="py-3 px-4 rounded-lg text-center transition-all text-sm font-semibold"
+                style={{
+                  background: m.stories === s ? "rgba(0,212,170,0.08)" : "var(--background)",
+                  border: `1px solid ${m.stories === s ? "rgba(0,212,170,0.25)" : "var(--border)"}`,
+                  color: m.stories === s ? "var(--primary)" : "var(--foreground)",
+                }}
+              >
+                {s} Story
+                {s === 2 && <span className="block text-[10px]" style={{ color: "var(--muted-foreground)" }}>+$10/sq labor</span>}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Linear Feet */}
@@ -157,7 +189,7 @@ export default function RoofMeasurementsSection(props: Props) {
             <NumField label="Pipe Jacks" value={m.pipeJackCount} onChange={v => props.onMeasurementChange("pipeJackCount", v)} />
             <NumField label="Split Boots" value={m.splitBootCount} onChange={v => props.onMeasurementChange("splitBootCount", v)} />
             <NumField label="EZ Plugs" value={m.ezPlugCount} onChange={v => props.onMeasurementChange("ezPlugCount", v)} />
-            <NumField label="Bathroom Vents" value={m.bathroomVentCount} onChange={v => props.onMeasurementChange("bathroomVentCount", v)} />
+            <NumField label="Broan Vents" value={m.bathroomVentCount} onChange={v => props.onMeasurementChange("bathroomVentCount", v)} />
           </div>
         </div>
 
@@ -212,7 +244,7 @@ export default function RoofMeasurementsSection(props: Props) {
                 onChange={e => props.onMeasurementChange("deckingAction", e.target.value)}
               >
                 <option value="none">No decking work</option>
-                <option value="tear-off">Tear off + replace</option>
+                <option value="tear-off">Remove + Replace</option>
                 <option value="overlay">Overlay (install over existing)</option>
               </select>
             </div>
@@ -238,7 +270,7 @@ export default function RoofMeasurementsSection(props: Props) {
           <div className="grid grid-cols-2 gap-2">
             {([
               { field: "shakeTearoff" as const, label: "Cedar Shake Tearoff", desc: "+$15/sq" },
-              { field: "handLoad" as const, label: "Hand Load", desc: "+$10/sq" },
+              { field: "handLoad" as const, label: "Hand Load", desc: "+$5/sq" },
               { field: "noDumpsterAccess" as const, label: "No Dumpster Access", desc: "Drag trash charge" },
             ]).map(({ field, label, desc }) => (
               <button
@@ -257,7 +289,7 @@ export default function RoofMeasurementsSection(props: Props) {
             ))}
           </div>
           <div className="mt-3">
-            <NumField label="Additional Layers (over 1)" value={m.additionalLayers} onChange={v => props.onMeasurementChange("additionalLayers", v)} />
+            <NumField label="Additional Layers (extra shingle/felt layers to tear off)" value={m.additionalLayers} onChange={v => props.onMeasurementChange("additionalLayers", v)} />
           </div>
         </div>
 

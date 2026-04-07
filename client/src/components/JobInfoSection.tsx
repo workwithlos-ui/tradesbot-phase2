@@ -1,5 +1,5 @@
 import SectionAccordion from "@/components/SectionAccordion";
-import { SUPPLIERS, SHINGLE_TYPES, MARKET_CONFIGS, PITCH_TIERS } from "@/lib/data";
+import { SUPPLIERS, SHINGLE_TYPES, MARKET_CONFIGS } from "@/lib/data";
 import { User } from "lucide-react";
 
 interface Props {
@@ -11,14 +11,10 @@ interface Props {
   supplier: string;
   shingleType: string;
   market: string;
-  pitch: number;
-  stories: number;
   onJobInfoChange: (field: string, value: string) => void;
   onSupplierChange: (value: string) => void;
   onShingleTypeChange: (value: string) => void;
   onMarketChange: (value: string) => void;
-  onPitchChange: (value: number) => void;
-  onStoriesChange: (value: number) => void;
 }
 
 export default function JobInfoSection(props: Props) {
@@ -67,7 +63,7 @@ export default function JobInfoSection(props: Props) {
             </div>
             <div>
               <label className="field-label">Address</label>
-              <input type="text" placeholder="123 Main St, St. Louis, MO" value={props.address} onChange={(e) => props.onJobInfoChange("address", e.target.value)} className="field-input" />
+              <input type="text" placeholder="123 Main St, Kansas City, MO" value={props.address} onChange={(e) => props.onJobInfoChange("address", e.target.value)} className="field-input" />
             </div>
             <div>
               <label className="field-label">Supplier</label>
@@ -80,17 +76,17 @@ export default function JobInfoSection(props: Props) {
             <div>
               <label className="field-label">Shingle Type</label>
               <select value={props.shingleType} onChange={(e) => props.onShingleTypeChange(e.target.value)} className="field-select">
-                <optgroup label="Main (Architectural)">
+                <optgroup label="Architectural (3 bndl/sq)">
                   {SHINGLE_TYPES.filter((s) => s.category === "architectural").map((s) => (
                     <option key={s.id} value={s.id}>{s.name} ({s.bundlesPerSquare} bndl/sq)</option>
                   ))}
                 </optgroup>
-                <optgroup label="Budget">
-                  {SHINGLE_TYPES.filter((s) => s.category === "budget").map((s) => (
+                <optgroup label="Specialty (4 bndl/sq)">
+                  {SHINGLE_TYPES.filter((s) => s.category === "specialty").map((s) => (
                     <option key={s.id} value={s.id}>{s.name} ({s.bundlesPerSquare} bndl/sq)</option>
                   ))}
                 </optgroup>
-                <optgroup label="Designer / Premium">
+                <optgroup label="Designer / Premium (5-6 bndl/sq)">
                   {SHINGLE_TYPES.filter((s) => s.category === "designer").map((s) => (
                     <option key={s.id} value={s.id}>{s.name} ({s.bundlesPerSquare} bndl/sq)</option>
                   ))}
@@ -125,64 +121,9 @@ export default function JobInfoSection(props: Props) {
           </div>
           {selectedMarket && (
             <p className="text-[11px] mt-2" style={{ color: "var(--muted-foreground)" }}>
-              Base labor: <span className="font-medium" style={{ color: "var(--primary)" }}>${selectedMarket.baseLaborRate}/sq</span>
+              Base labor: <span className="font-medium" style={{ color: "var(--primary)" }}>${selectedMarket.baseLaborRate}/sq</span> (includes tear off, install, underlayment, I&W, drip edge, valley metal, pipe jacks, haul off & cleanup)
             </p>
           )}
-        </div>
-
-        {/* Pitch + Stories */}
-        <div className="pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-          <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--muted-foreground)" }}>Roof Pitch & Stories</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="field-label">Pitch</label>
-              <select
-                className="field-select"
-                value={props.pitch}
-                onChange={(e) => props.onPitchChange(parseInt(e.target.value))}
-              >
-                {[1,2,3,4,5,6,7,8,9,10,11,12,13,14].map(p => {
-                  const tier = PITCH_TIERS.find(t => {
-                    if (p >= 4 && p <= 7 && t.id === "standard") return true;
-                    if (p >= 8 && p <= 9 && t.id === "8-9") return true;
-                    if (p >= 10 && p <= 11 && t.id === "10-11") return true;
-                    if (p >= 12 && t.id === "12-plus") return true;
-                    return false;
-                  });
-                  const adder = tier?.adderPerSquare || 0;
-                  const label = p <= 3 ? `${p}/12 (Low slope / mod bit)` : `${p}/12${adder > 0 ? ` (+$${adder}/sq)` : ""}`;
-                  return <option key={p} value={p}>{label}</option>;
-                })}
-                <option value={99}>Mansard (+$40/sq)</option>
-              </select>
-              {props.pitch <= 3 && (
-                <div className="mt-1.5 text-[11px] px-2 py-1.5 rounded surface-warn" style={{ color: "#FBBF24" }}>
-                  Low slope: Modified bitumen will be auto-added to materials
-                </div>
-              )}
-            </div>
-            <div>
-              <label className="field-label">Stories</label>
-              <div className="grid grid-cols-2 gap-2">
-                {[1, 2].map(s => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => props.onStoriesChange(s)}
-                    className="py-3 px-4 rounded-lg text-center transition-all text-sm font-semibold"
-                    style={{
-                      background: props.stories === s ? "rgba(0,212,170,0.08)" : "var(--background)",
-                      border: `1px solid ${props.stories === s ? "rgba(0,212,170,0.25)" : "var(--border)"}`,
-                      color: props.stories === s ? "var(--primary)" : "var(--foreground)",
-                    }}
-                  >
-                    {s} Story
-                    {s >= 2 && <span className="block text-[10px] font-num" style={{ color: "var(--muted-foreground)" }}>+$10/sq</span>}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </SectionAccordion>
