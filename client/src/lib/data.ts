@@ -12,6 +12,7 @@ export interface ShingleType {
   bundlesPerSquare: number;
   starterLfPerBundle: number; // designer starters have different LF
   nailSize: "1-1/4" | "1-3/4"; // Ryan: architectural = 1 1/4", designer/specialty = 1 3/4"
+  pricePerBundle: number; // ABC Supply baseline pricing
 }
 
 export interface Supplier {
@@ -129,20 +130,20 @@ export const MARKET_CONFIGS: MarketConfig[] = [
 // Designer (4-6 bndl/sq, 1 3/4" nails): Presidential, Windsor, Grand Sequoia, etc.
 export const SHINGLE_TYPES: ShingleType[] = [
   // --- Architectural (3 bundles/SQ, 1 1/4" coil) ---
-  { id: "malarkey-highlander", name: "Malarkey Highlander", manufacturer: "Malarkey", category: "architectural", bundlesPerSquare: 3, starterLfPerBundle: 110, nailSize: "1-1/4" },
-  { id: "malarkey-vista", name: "Malarkey Vista", manufacturer: "Malarkey", category: "architectural", bundlesPerSquare: 3, starterLfPerBundle: 110, nailSize: "1-1/4" },
-  { id: "iko-cambridge", name: "IKO Cambridge", manufacturer: "IKO", category: "architectural", bundlesPerSquare: 3, starterLfPerBundle: 110, nailSize: "1-1/4" },
+  { id: "malarkey-highlander", name: "Malarkey Highlander", manufacturer: "Malarkey", category: "architectural", bundlesPerSquare: 3, starterLfPerBundle: 110, nailSize: "1-1/4", pricePerBundle: 33 },
+  { id: "malarkey-vista", name: "Malarkey Vista", manufacturer: "Malarkey", category: "architectural", bundlesPerSquare: 3, starterLfPerBundle: 110, nailSize: "1-1/4", pricePerBundle: 38 },
+  { id: "iko-cambridge", name: "IKO Cambridge", manufacturer: "IKO", category: "architectural", bundlesPerSquare: 3, starterLfPerBundle: 110, nailSize: "1-1/4", pricePerBundle: 32 },
   // --- Specialty (4 bundles/SQ, 1 3/4" coil) ---
-  { id: "malarkey-legacy", name: "Malarkey Legacy", manufacturer: "Malarkey", category: "specialty", bundlesPerSquare: 4, starterLfPerBundle: 70, nailSize: "1-3/4" },
-  { id: "gaf-camelot-ii", name: "GAF Camelot II", manufacturer: "GAF", category: "specialty", bundlesPerSquare: 4, starterLfPerBundle: 60, nailSize: "1-3/4" },
-  { id: "certainteed-belmont", name: "CertainTeed Belmont", manufacturer: "CertainTeed", category: "specialty", bundlesPerSquare: 4, starterLfPerBundle: 35, nailSize: "1-3/4" },
+  { id: "malarkey-legacy", name: "Malarkey Legacy", manufacturer: "Malarkey", category: "specialty", bundlesPerSquare: 4, starterLfPerBundle: 70, nailSize: "1-3/4", pricePerBundle: 42 },
+  { id: "gaf-camelot-ii", name: "GAF Camelot II", manufacturer: "GAF", category: "specialty", bundlesPerSquare: 4, starterLfPerBundle: 60, nailSize: "1-3/4", pricePerBundle: 48 },
+  { id: "certainteed-belmont", name: "CertainTeed Belmont", manufacturer: "CertainTeed", category: "specialty", bundlesPerSquare: 4, starterLfPerBundle: 35, nailSize: "1-3/4", pricePerBundle: 45 },
   // --- Designer (5-6 bundles/SQ, 1 3/4" coil) ---
-  { id: "certainteed-presidential", name: "CertainTeed Presidential", manufacturer: "CertainTeed", category: "designer", bundlesPerSquare: 5, starterLfPerBundle: 35, nailSize: "1-3/4" },
-  { id: "certainteed-presidential-ir", name: "CertainTeed Presidential IR", manufacturer: "CertainTeed", category: "designer", bundlesPerSquare: 5, starterLfPerBundle: 35, nailSize: "1-3/4" },
-  { id: "certainteed-presidential-tl", name: "CertainTeed Presidential TL", manufacturer: "CertainTeed", category: "designer", bundlesPerSquare: 6, starterLfPerBundle: 35, nailSize: "1-3/4" },
-  { id: "certainteed-grand-manor", name: "CertainTeed Grand Manor", manufacturer: "CertainTeed", category: "designer", bundlesPerSquare: 5, starterLfPerBundle: 35, nailSize: "1-3/4" },
-  { id: "malarkey-windsor", name: "Malarkey Windsor", manufacturer: "Malarkey", category: "designer", bundlesPerSquare: 5, starterLfPerBundle: 70, nailSize: "1-3/4" },
-  { id: "gaf-grand-sequoia", name: "GAF Grand Sequoia", manufacturer: "GAF", category: "designer", bundlesPerSquare: 5, starterLfPerBundle: 60, nailSize: "1-3/4" },
+  { id: "certainteed-presidential", name: "CertainTeed Presidential", manufacturer: "CertainTeed", category: "designer", bundlesPerSquare: 5, starterLfPerBundle: 35, nailSize: "1-3/4", pricePerBundle: 55 },
+  { id: "certainteed-presidential-ir", name: "CertainTeed Presidential IR", manufacturer: "CertainTeed", category: "designer", bundlesPerSquare: 5, starterLfPerBundle: 35, nailSize: "1-3/4", pricePerBundle: 58 },
+  { id: "certainteed-presidential-tl", name: "CertainTeed Presidential TL", manufacturer: "CertainTeed", category: "designer", bundlesPerSquare: 6, starterLfPerBundle: 35, nailSize: "1-3/4", pricePerBundle: 62 },
+  { id: "certainteed-grand-manor", name: "CertainTeed Grand Manor", manufacturer: "CertainTeed", category: "designer", bundlesPerSquare: 5, starterLfPerBundle: 35, nailSize: "1-3/4", pricePerBundle: 72 },
+  { id: "malarkey-windsor", name: "Malarkey Windsor", manufacturer: "Malarkey", category: "designer", bundlesPerSquare: 5, starterLfPerBundle: 70, nailSize: "1-3/4", pricePerBundle: 52 },
+  { id: "gaf-grand-sequoia", name: "GAF Grand Sequoia", manufacturer: "GAF", category: "designer", bundlesPerSquare: 5, starterLfPerBundle: 60, nailSize: "1-3/4", pricePerBundle: 56 },
 ];
 
 export const SUPPLIERS: Supplier[] = [
@@ -178,8 +179,9 @@ export const VENT_OPTIONS: VentOption[] = [
 // ---- Material Pricing (KC prices from Ryan) ----
 
 export const MATERIAL_PRICES = {
-  // Shingle bundles -- price TBD from ABC updated list, placeholder
-  shingleBundle: 0, // will be per-shingle-type later
+  // Shingle bundles -- ABC Supply baseline pricing per bundle (architectural avg)
+  // These are fallback prices; per-type pricing overrides below
+  shingleBundle: 35, // architectural baseline ~$35/bundle
   // Starter
   starterBundle: 68.49,
   starterLfPerBundle: 110, // standard, overridden by shingle type
@@ -416,7 +418,8 @@ export function calculateMaterials(
     : 0;
 
   // Synthetic Underlayment: total squares minus I&W coverage
-  const iceWaterSqCoverage = iceWaterRolls > 0 ? iceWaterRolls * (P.iceWaterLfPerRoll / 100) : 0;
+  // I&W rolls are 36" (3ft) wide x 66.6 LF = ~200 sq ft = 2 sq per roll
+  const iceWaterSqCoverage = iceWaterRolls > 0 ? iceWaterRolls * (P.iceWaterLfPerRoll * 3 / 100) : 0;
   const syntheticSqNeeded = Math.max(0, totalSquares - iceWaterSqCoverage);
   const syntheticRolls = syntheticSqNeeded > 0
     ? Math.ceil(syntheticSqNeeded / P.syntheticSqPerRoll)
@@ -549,8 +552,9 @@ export function calculateMaterialCostLines(
     }
   };
 
-  // Shingles (price TBD, using 0 placeholder until ABC list arrives)
-  add("shingle-bundles", `${shingleType.name} Bundles`, calc.shingleBundles, "bundles", P.shingleBundle);
+  // Shingles — use per-type pricing, fall back to generic baseline
+  const shingleUnitPrice = shingleType.pricePerBundle || P.shingleBundle;
+  add("shingle-bundles", `${shingleType.name} Bundles`, calc.shingleBundles, "bundles", shingleUnitPrice);
   add("starter-bundles", "Starter Strip Bundles", calc.starterBundles, "bundles", P.starterBundle);
 
   // Hip & Ridge

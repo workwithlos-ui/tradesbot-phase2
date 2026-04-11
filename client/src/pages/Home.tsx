@@ -29,20 +29,29 @@ export default function Home() {
   };
 
   const handleGeneratePdf = () => {
-    generateEstimatePdf({
-      state: e.state,
-      materialCostLines: e.materialCostLines,
-      laborCostLines: e.laborCostLines,
-      totalSquares: e.totalSquares,
-      totalMaterialCost: e.totalMaterialCost,
-      totalLaborCost: e.totalLaborCost,
-      tarpCharge: e.tarpCharge,
-      totalCustomCosts: e.totalCustomCosts,
-      estimateTotal: e.estimateTotal,
-      requiredCustomerPrice: e.requiredCustomerPrice,
-      targetMarginPct: e.state.targetMarginPct,
-    });
-    toast.success("PDF generated!");
+    if (e.totalSquares <= 0) {
+      toast.error("Enter roof measurements before generating a PDF.");
+      return;
+    }
+    try {
+      generateEstimatePdf({
+        state: e.state,
+        materialCostLines: e.materialCostLines,
+        laborCostLines: e.laborCostLines,
+        totalSquares: e.totalSquares,
+        totalMaterialCost: e.totalMaterialCost,
+        totalLaborCost: e.totalLaborCost,
+        tarpCharge: e.tarpCharge,
+        totalCustomCosts: e.totalCustomCosts,
+        estimateTotal: e.estimateTotal,
+        requiredCustomerPrice: e.requiredCustomerPrice,
+        targetMarginPct: e.state.targetMarginPct,
+      });
+      toast.success("PDF generated — check your downloads.");
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      toast.error("PDF generation failed. Check console for details.");
+    }
   };
 
   return (
